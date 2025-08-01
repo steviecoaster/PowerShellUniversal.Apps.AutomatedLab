@@ -8,6 +8,7 @@ function New-UDAutomatedLabApp {
     #>
 
     # Load all page scripts
+    Write-Output $PSScriptRoot
     $DashboardPath = Join-Path $PSScriptRoot -ChildPath 'dashboards\AutomatedLab'
     Get-ChildItem (Join-Path $DashboardPath -ChildPath 'pages') -Recurse -Filter *.ps1 | Foreach-Object {
         . $_.FullName

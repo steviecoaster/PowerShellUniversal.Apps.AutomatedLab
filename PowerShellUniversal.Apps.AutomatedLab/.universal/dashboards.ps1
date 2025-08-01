@@ -1,0 +1,1 @@
+﻿New-PSUApp -Name 'AutomatedLab' -BaseUrl '/automatedlab' -Module 'PowerShellUniversal.Apps.AutomatedLab' -Command 'New-UDAutomatedLabApp' -AutoDeploy -Description "AutomatedLab management app for PowerShell Universal." -Environment 'PowerShell 7'
