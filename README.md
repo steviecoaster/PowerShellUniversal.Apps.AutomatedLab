@@ -14,11 +14,13 @@ Once you have an AutomatedLab script, you use this thing to manage the lab, and 
 
 ## Requirements
 
-- [PowerShell Universal 5.0+](https://powershelluniversal.com)
+- Any supported version of Windows with the Hyper-V role enabled
+- PowerShell 7+
+- [AutomatedLab module (5.58.17-preview+](https://github.com/AutomatedLab/AutomatedLab)
 - [AutomatedLab.Utils module (v1.6.0+)](https://github.com/steviecoaster/automatedlab.utils)
-- Configuration module (v1.6.0+)
-- Windows environment (for AutomatedLab functionality)
-- PowerShell 7
+- [Configuration module (v1.6.0+)](https://github.com/PoshCode/Configuration)
+- [PowerShell Universal 5.0+](https://powershelluniversal.com) - the unlicensed version is fine!
+
 
 ## Installation
 
@@ -34,10 +36,16 @@ _Coming Soon_
 
 _Ensure you have the necessary pre-requisites installed before continuing_
 
-1. Clone this repository
-2. Copy the `PowerShellUniversal.Apps.AutomatedLab` folder to `C:\ProgramData\UniversalAutomation\Repository\Modules` on your PSU server.
+1. Clone this repository:
+```powershell
+git clone https://github.com/steviecoaster/PowerShellUniversal.Apps.AutomatedLab`
+```
+2. Copy the `PowerShellUniversal.Apps.AutomatedLab` folder to `C:\ProgramData\UniversalAutomation\Repository\Modules` on your PSU server:
+```powershell
+Copy-Item -Path .\PowerShellUniversal.Apps.AutomatedLab\ -Recurse -Destination C:\ProgramData\UniversalAutomation\Repository\Modules\
+```
 3. Restart PowerShell Universal
-4. The app will be automatically deployed at `/automatedlab`
+4. The app will be automatically deployed at `[YOUR_POWERSHELL_UNIVERSAL_INSTANCE]/automatedlab`
 
 ## Usage
 
