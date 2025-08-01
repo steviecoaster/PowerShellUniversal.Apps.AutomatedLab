@@ -16,7 +16,7 @@ Once you have an AutomatedLab script, you use this thing to manage the lab, and 
 
 - Any supported version of Windows with the Hyper-V role enabled
 - PowerShell 7+
-- [AutomatedLab module (5.58.17-preview+](https://github.com/AutomatedLab/AutomatedLab)
+- [AutomatedLab module (5.58.0+](https://github.com/AutomatedLab/AutomatedLab)
 - [AutomatedLab.Utils module (v1.6.0+)](https://github.com/steviecoaster/automatedlab.utils)
 - [Configuration module (v1.6.0+)](https://github.com/PoshCode/Configuration)
 - [PowerShell Universal 5.0+](https://powershelluniversal.com) - the unlicensed version is fine!
