@@ -117,3 +117,134 @@ function Split-Configuration {
         [PSCustomObject]$newHash
     }
 }
+
+function Get-LabInfo {
+    <#
+    .SYNOPSIS
+    Imports a lab by name and returns basic information about the lab machines.
+    
+    .DESCRIPTION
+    This function imports an AutomatedLab by name and returns information about each machine
+    including the name, processor count, memory, and operating system.
+    
+    .PARAMETER LabName
+    The name of the lab to import and analyze.
+    
+    .EXAMPLE
+    Get-LabInfo -LabName "MyTestLab"
+    
+    .EXAMPLE
+    Get-LabInfo "MyTestLab" | Format-Table -AutoSize
+    
+    .NOTES
+    This function requires the AutomatedLab module to be installed and available.
+    #>
+    
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true, Position = 0)]
+        [ArgumentCompleter({
+            param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+            try {
+                $availableLabs = Get-Lab -List
+                $availableLabs | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
+                    [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
+                }
+            }
+            catch {
+                @()
+            }
+        })]
+        [string]$LabName
+    )
+    
+    try {
+
+        Write-Verbose "Importing lab: $LabName"
+        # Nothing nulls this output. Resistence is futile. Thankfully this usecase will never see it so whatever.
+        Import-Lab -Name $LabName -NoValidation | Out-Null
+
+        $machines = Get-LabVM
+        $status = Get-LabVMStatus -AsHashTable
+        if (-not $machines) {
+            Write-Warning "No machines found in lab '$LabName'"
+            return
+        }
+        
+        $labInfo = foreach ($machine in $machines) {
+            [PSCustomObject]@{
+                Name = $machine.Name
+                ProcessorCount = $machine.Processors
+                Memory = $machine.Memory
+                OperatingSystem = $machine.OperatingSystem.OperatingSystemName
+                MemoryGB = [Math]::Round($machine.Memory / 1GB, 2)
+                Status = $status[$machine.Name]
+            }
+        }
+        
+        Write-Verbose "Retrieved information for $($labInfo.Count) machines"
+        return $labInfo
+    }
+    catch {
+        Write-Error "Failed to import lab '$LabName': $($_.Exception.Message)"
+        throw
+    }
+}
+
+function New-AutomatedLabDefinitionScript {
+    param([hashtable]$LabData)
+    
+    $script = @"
+# AutomatedLab Definition: $($LabData.LabName)
+# Generated: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
+
+Import-Module AutomatedLab
+
+New-LabDefinition -Name '$($LabData.LabName)' -DefaultVirtualizationEngine HyperV
+
+"@
+
+    # Add virtual switches
+    foreach ($network in $LabData.Networks) {
+        switch ($network.SwitchType) {
+            'DefaultSwitch' {
+                $script += "Add-LabVirtualNetworkDefinition -Name 'Default Switch' -HyperVProperties @{ SwitchType = 'External'; AdapterName = 'Default Switch' }`n"
+            }
+            'Internal' {
+                $script += "Add-LabVirtualNetworkDefinition -Name '$($network.Name)' -AddressSpace '$($network.Subnet)'"
+                if ($network.Gateway) { 
+                    $script += " -HyperVProperties @{ SwitchType = 'Internal' }" 
+                }
+                $script += "`n"
+            }
+            'External' {
+                $script += "Add-LabVirtualNetworkDefinition -Name '$($network.Name)' -HyperVProperties @{ SwitchType = 'External'; AdapterName = '$($network.PhysicalAdapter)' }`n"
+            }
+        }
+    }
+
+    $script += "`n"
+
+    # Add VMs
+    foreach ($vm in $LabData.VMs) {
+        $script += "Add-LabMachineDefinition -Name '$($vm.Name)' -OperatingSystem '$($vm.OS)' -Memory $($vm.RAM)GB -Processors $($vm.CPU)"
+        
+        if ($vm.NetworkAdapters -and $vm.NetworkAdapters.Count -gt 0) {
+            $adapters = $vm.NetworkAdapters | ForEach-Object {
+                "New-LabNetworkAdapterDefinition -VirtualSwitch '$($_.VirtualSwitch)'"
+            }
+            $script += " -NetworkAdapter @($($adapters -join ', '))"
+        }
+        $script += "`n"
+    }
+
+    $script += @"
+
+Install-Lab
+
+Write-Host "Lab '$($LabData.LabName)' deployed successfully!" -ForegroundColor Green
+Show-LabDeploymentSummary
+"@
+
+    return $script
+}

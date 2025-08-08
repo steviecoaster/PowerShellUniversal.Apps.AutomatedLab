@@ -35,6 +35,18 @@
                         # You can add actual status logic here
                         New-UDChip -Label "Ready" -Color success -Variant outlined
                     }
+                    New-UDTableColumn -Property VMCount -Title "VM Count" -Render {
+                        try {
+                            $labInfo = Get-LabInfo -LabName $EventData.Lab -ErrorAction SilentlyContinue
+                            if ($labInfo) {
+                                New-UDChip -Label "$($labInfo.Count) VMs" -Color info -Variant outlined
+                            } else {
+                                New-UDChip -Label "Unknown" -Color default -Variant outlined
+                            }
+                        } catch {
+                            New-UDChip -Label "Error" -Color error -Variant outlined
+                        }
+                    }
                     New-UDTableColumn -Property Actions -Title "Actions" -Render {
                         New-UDStack -Direction row -Spacing 1 -Content {
                             <# Start lab button #>
@@ -52,6 +64,97 @@
                                 Show-UDToast -Message "Stopping lab: $($EventData.Lab)" -MessageColor info
 
                             } -Icon (New-UDIcon -Icon stop)
+                        
+                            <# View VMs button #>
+                            New-UDButton -Text "View VMs" -Color info -Size small -Variant outlined -OnClick {
+                                try {
+                                    $LabVMs = Get-LabInfo -LabName $EventData.Lab
+                                    if ($LabVMs -and $LabVMs.Count -gt 0) {
+                                        Show-UDModal -Content {
+                                            New-UDCard -Content {
+                                                New-UDTypography -Variant h5 -Text "Virtual Machines in $($EventData.Lab)" -Style @{ 'margin-bottom' = '20px'; 'color' = '#1976d2'; 'text-align' = 'center' }
+                                                
+                                                # VM Details Table
+                                                New-UDTable -Data $LabVMs -Columns @(
+                                                    New-UDTableColumn -Property Name -Title 'VM Name' -Render {
+                                                        New-UDStack -Direction row -Spacing 1 -AlignItems center -Content {
+                                                            New-UDIcon -Icon desktop -Size sm -Color primary
+                                                            New-UDTypography -Text $EventData.Name -Variant body2 -Style @{ 'font-weight' = '500' }
+                                                        }
+                                                    }
+                                                    New-UDTableColumn -Property ProcessorCount -Title 'CPUs' -Render {
+                                                        New-UDChip -Label "$($EventData.ProcessorCount) CPUs" -Color success -Variant outlined -Icon (New-UDIcon -Icon microchip)
+                                                    }
+                                                    New-UDTableColumn -Property MemoryGB -Title 'Memory' -Render {
+                                                        New-UDChip -Label "$($EventData.MemoryGB) GB" -Color info -Variant outlined -Icon (New-UDIcon -Icon memory)
+                                                    }
+                                                    New-UDTableColumn -Property Status -Title 'Status' -Render {
+                                                        $statusColor = switch ($EventData.Status) {
+                                                            'Running' { 'success' }
+                                                            'Stopped' { 'error' }
+                                                            'Starting' { 'warning' }
+                                                            'Stopping' { 'warning' }
+                                                            default { 'default' }
+                                                        }
+                                                        New-UDChip -Label $EventData.Status -Color $statusColor -Variant filled
+                                                    }
+                                                    New-UDTableColumn -Property OperatingSystem -Title 'Operating System' -Render {
+                                                        New-UDTypography -Text $EventData.OperatingSystem -Variant body2 -Style @{ 'max-width' = '200px'; 'word-wrap' = 'break-word' }
+                                                    }
+                                                ) -Dense -ShowSearch -ShowPagination -PageSize 5
+                                                
+                                                # Summary section
+                                                New-UDCard -Content {
+                                                    New-UDTypography -Variant h6 -Text "Lab Summary" -Style @{ 'margin-bottom' = '12px'; 'color' = '#424242' }
+                                                    New-UDRow -Columns {
+                                                        New-UDColumn -SmallSize 3 -Content {
+                                                            New-UDStack -Direction column -AlignItems center -Content {
+                                                                New-UDIcon -Icon server -Size lg -Color primary
+                                                                New-UDTypography -Text "Total VMs" -Variant caption
+                                                                New-UDTypography -Text $LabVMs.Count -Variant h6 -Style @{ 'font-weight' = 'bold' }
+                                                            }
+                                                        }
+                                                        New-UDColumn -SmallSize 3 -Content {
+                                                            $totalCPUs = ($LabVMs | Measure-Object -Property ProcessorCount -Sum).Sum
+                                                            New-UDStack -Direction column -AlignItems center -Content {
+                                                                New-UDIcon -Icon microchip -Size lg -Color success
+                                                                New-UDTypography -Text "Total CPUs" -Variant caption
+                                                                New-UDTypography -Text $totalCPUs -Variant h6 -Style @{ 'font-weight' = 'bold' }
+                                                            }
+                                                        }
+                                                        New-UDColumn -SmallSize 3 -Content {
+                                                            $totalMemory = ($LabVMs | Measure-Object -Property MemoryGB -Sum).Sum
+                                                            New-UDStack -Direction column -AlignItems center -Content {
+                                                                New-UDIcon -Icon memory -Size lg -Color info
+                                                                New-UDTypography -Text "Total Memory" -Variant caption
+                                                                New-UDTypography -Text "$totalMemory GB" -Variant h6 -Style @{ 'font-weight' = 'bold' }
+                                                            }
+                                                        }
+                                                        New-UDColumn -SmallSize 3 -Content {
+                                                            $runningVMs = ($LabVMs | Where-Object { $_.Status -eq 'Running' } | Measure-Object).Count
+                                                            New-UDStack -Direction column -AlignItems center -Content {
+                                                                New-UDIcon -Icon play-circle -Size lg -Color success
+                                                                New-UDTypography -Text "Running" -Variant caption
+                                                                New-UDTypography -Text $runningVMs -Variant h6 -Style @{ 'font-weight' = 'bold' }
+                                                            }
+                                                        }
+                                                    }
+                                                } -Style @{ 'margin-top' = '16px'; 'background-color' = 'rgba(33, 150, 243, 0.04)'; 'padding' = '16px' }
+                                            } -Style @{ 'max-width' = '800px'; 'margin' = 'auto' }
+                                        } -Header {
+                                            New-UDTypography -Text "Lab VMs: $($EventData.Lab)" -Variant h6
+                                        } -Footer {
+                                            New-UDButton -Text "Close" -Color primary -OnClick {
+                                                Hide-UDModal
+                                            }
+                                        } -FullWidth -MaxWidth 'lg'
+                                    } else {
+                                        Show-UDToast -Message "No VMs found in lab: $($EventData.Lab)" -MessageColor warning
+                                    }
+                                } catch {
+                                    Show-UDToast -Message "Error retrieving VM information: $($_.Exception.Message)" -MessageColor error
+                                }
+                            } -Icon (New-UDIcon -Icon list)
                         
                             New-UDButton -Text "Details" -Color primary -Size small -Variant text -OnClick {
                                 $LabDetails = Get-PSULabConfiguration -Name $EventData.Lab
