@@ -1,4 +1,4 @@
-﻿$ManageLabsPage = New-UDPage -Url "/Manage-Labs" -Name "Manage Labs" -Content {
+$ManageLabsPage = New-UDPage -Url "/Manage-Labs" -Name "Manage Labs" -Content {
     # Header section
     New-UDRow -Columns {
         New-UDColumn -SmallSize 12 -Content {
@@ -36,184 +36,155 @@
                         New-UDChip -Label "Ready" -Color success -Variant outlined
                     }
                     New-UDTableColumn -Property VMCount -Title "VM Count" -Render {
+                        # Get actual VM count for the lab
+                        $vmCount = 0
                         try {
-                            $labInfo = Get-LabInfo -LabName $EventData.Lab -ErrorAction SilentlyContinue
-                            if ($labInfo) {
-                                New-UDChip -Label "$($labInfo.Count) VMs" -Color info -Variant outlined
-                            } else {
-                                New-UDChip -Label "Unknown" -Color default -Variant outlined
+                            $labName = $EventData.Lab
+                            if (![string]::IsNullOrEmpty($labName)) {
+                                $LabVMs = Get-PSULabInfo -LabName $labName -ErrorAction SilentlyContinue
+                                if ($LabVMs) {
+                                    $vmCount = $LabVMs.Count
+                                }
                             }
                         } catch {
-                            New-UDChip -Label "Error" -Color error -Variant outlined
+                            $vmCount = 0
                         }
+                        New-UDChip -Label "$vmCount VMs" -Color info -Variant outlined
                     }
                     New-UDTableColumn -Property Actions -Title "Actions" -Render {
                         New-UDStack -Direction row -Spacing 1 -Content {
                             <# Start lab button #>
                             New-UDButton -Text "Start" -Color success -Size small -Variant contained -OnClick {
-                            
-                                $psuscript = Get-PSUScript -Name 'Start-Lab.ps1' -AppToken $Secret:AU_Token -TrustCertificate
-                                Invoke-PSUScript -Script $psuscript -Parameters @{LabName = $($EventData.Lab) } -AppToken $Secret:AU_Token -TrustCertificate
-                                Show-UDToast -Message "Starting lab: $($EventData.Lab)" -MessageColor info
+                                $labName = $null
+                                
+                                # Try different property names in order
+                                if (![string]::IsNullOrEmpty($EventData.Lab)) {
+                                    $labName = $EventData.Lab
+                                }
+                                elseif (![string]::IsNullOrEmpty($EventData.Name)) {
+                                    $labName = $EventData.Name
+                                }
+                                elseif (![string]::IsNullOrEmpty($EventData.LabName)) {
+                                    $labName = $EventData.LabName
+                                }
+                                elseif (![string]::IsNullOrEmpty($EventData.Definition)) {
+                                    $labName = $EventData.Definition
+                                }
+                                
+                                if (![string]::IsNullOrEmpty($labName)) {
+                                    $psuscript = Get-PSUScript -Name 'Start-Lab.ps1' -AppToken $Secret:AU_Token -TrustCertificate
+                                    Invoke-PSUScript -Script $psuscript -Parameters @{LabName = $labName } -AppToken $Secret:AU_Token -TrustCertificate
+                                    Show-UDToast -Message "Starting lab: $labName" -MessageColor info
+                                } else {
+                                    Show-UDToast -Message "Unable to determine lab name" -MessageColor error
+                                }
                             } -Icon (New-UDIcon -Icon play)
                         
                             <# Stop Lab button #>
                             New-UDButton -Text "Stop" -Color error -Size small -Variant outlined -OnClick {
-                                $psuscript = Get-PSUScript -Name 'Stop-Lab.ps1' -AppToken $Secret:AU_Toke -TrustCertificate
-                                Invoke-PSUScript -Script $psuscript -Parameters @{LabName = $($EventData.Lab) } -AppToken $Secret:AU_Token -TrustCertificate
-                                Show-UDToast -Message "Stopping lab: $($EventData.Lab)" -MessageColor info
-
+                                $labName = $null
+                                
+                                # Try different property names in order
+                                if (![string]::IsNullOrEmpty($EventData.Lab)) {
+                                    $labName = $EventData.Lab
+                                }
+                                elseif (![string]::IsNullOrEmpty($EventData.Name)) {
+                                    $labName = $EventData.Name
+                                }
+                                elseif (![string]::IsNullOrEmpty($EventData.LabName)) {
+                                    $labName = $EventData.LabName
+                                }
+                                elseif (![string]::IsNullOrEmpty($EventData.Definition)) {
+                                    $labName = $EventData.Definition
+                                }
+                                
+                                if (![string]::IsNullOrEmpty($labName)) {
+                                    $psuscript = Get-PSUScript -Name 'Stop-Lab.ps1' -AppToken $Secret:AU_Token -TrustCertificate
+                                    Invoke-PSUScript -Script $psuscript -Parameters @{LabName = $labName } -AppToken $Secret:AU_Token -TrustCertificate
+                                    Show-UDToast -Message "Stopping lab: $labName" -MessageColor info
+                                } else {
+                                    Show-UDToast -Message "Unable to determine lab name" -MessageColor error
+                                }
                             } -Icon (New-UDIcon -Icon stop)
                         
-                            <# View VMs button #>
-                            New-UDButton -Text "View VMs" -Color info -Size small -Variant outlined -OnClick {
-                                try {
-                                    $LabVMs = Get-LabInfo -LabName $EventData.Lab
-                                    if ($LabVMs -and $LabVMs.Count -gt 0) {
-                                        Show-UDModal -Content {
-                                            New-UDCard -Content {
-                                                New-UDTypography -Variant h5 -Text "Virtual Machines in $($EventData.Lab)" -Style @{ 'margin-bottom' = '20px'; 'color' = '#1976d2'; 'text-align' = 'center' }
-                                                
-                                                # VM Details Table
-                                                New-UDTable -Data $LabVMs -Columns @(
-                                                    New-UDTableColumn -Property Name -Title 'VM Name' -Render {
-                                                        New-UDStack -Direction row -Spacing 1 -AlignItems center -Content {
-                                                            New-UDIcon -Icon desktop -Size sm -Color primary
-                                                            New-UDTypography -Text $EventData.Name -Variant body2 -Style @{ 'font-weight' = '500' }
-                                                        }
-                                                    }
-                                                    New-UDTableColumn -Property ProcessorCount -Title 'CPUs' -Render {
-                                                        New-UDChip -Label "$($EventData.ProcessorCount) CPUs" -Color success -Variant outlined -Icon (New-UDIcon -Icon microchip)
-                                                    }
-                                                    New-UDTableColumn -Property MemoryGB -Title 'Memory' -Render {
-                                                        New-UDChip -Label "$($EventData.MemoryGB) GB" -Color info -Variant outlined -Icon (New-UDIcon -Icon memory)
-                                                    }
-                                                    New-UDTableColumn -Property Status -Title 'Status' -Render {
-                                                        $statusColor = switch ($EventData.Status) {
-                                                            'Running' { 'success' }
-                                                            'Stopped' { 'error' }
-                                                            'Starting' { 'warning' }
-                                                            'Stopping' { 'warning' }
-                                                            default { 'default' }
-                                                        }
-                                                        New-UDChip -Label $EventData.Status -Color $statusColor -Variant filled
-                                                    }
-                                                    New-UDTableColumn -Property OperatingSystem -Title 'Operating System' -Render {
-                                                        New-UDTypography -Text $EventData.OperatingSystem -Variant body2 -Style @{ 'max-width' = '200px'; 'word-wrap' = 'break-word' }
-                                                    }
-                                                ) -Dense -ShowSearch -ShowPagination -PageSize 5
-                                                
-                                                # Summary section
-                                                New-UDCard -Content {
-                                                    New-UDTypography -Variant h6 -Text "Lab Summary" -Style @{ 'margin-bottom' = '12px'; 'color' = '#424242' }
-                                                    New-UDRow -Columns {
-                                                        New-UDColumn -SmallSize 3 -Content {
-                                                            New-UDStack -Direction column -AlignItems center -Content {
-                                                                New-UDIcon -Icon server -Size lg -Color primary
-                                                                New-UDTypography -Text "Total VMs" -Variant caption
-                                                                New-UDTypography -Text $LabVMs.Count -Variant h6 -Style @{ 'font-weight' = 'bold' }
-                                                            }
-                                                        }
-                                                        New-UDColumn -SmallSize 3 -Content {
-                                                            $totalCPUs = ($LabVMs | Measure-Object -Property ProcessorCount -Sum).Sum
-                                                            New-UDStack -Direction column -AlignItems center -Content {
-                                                                New-UDIcon -Icon microchip -Size lg -Color success
-                                                                New-UDTypography -Text "Total CPUs" -Variant caption
-                                                                New-UDTypography -Text $totalCPUs -Variant h6 -Style @{ 'font-weight' = 'bold' }
-                                                            }
-                                                        }
-                                                        New-UDColumn -SmallSize 3 -Content {
-                                                            $totalMemory = ($LabVMs | Measure-Object -Property MemoryGB -Sum).Sum
-                                                            New-UDStack -Direction column -AlignItems center -Content {
-                                                                New-UDIcon -Icon memory -Size lg -Color info
-                                                                New-UDTypography -Text "Total Memory" -Variant caption
-                                                                New-UDTypography -Text "$totalMemory GB" -Variant h6 -Style @{ 'font-weight' = 'bold' }
-                                                            }
-                                                        }
-                                                        New-UDColumn -SmallSize 3 -Content {
-                                                            $runningVMs = ($LabVMs | Where-Object { $_.Status -eq 'Running' } | Measure-Object).Count
-                                                            New-UDStack -Direction column -AlignItems center -Content {
-                                                                New-UDIcon -Icon play-circle -Size lg -Color success
-                                                                New-UDTypography -Text "Running" -Variant caption
-                                                                New-UDTypography -Text $runningVMs -Variant h6 -Style @{ 'font-weight' = 'bold' }
-                                                            }
-                                                        }
-                                                    }
-                                                } -Style @{ 'margin-top' = '16px'; 'background-color' = 'rgba(33, 150, 243, 0.04)'; 'padding' = '16px' }
-                                            } -Style @{ 'max-width' = '800px'; 'margin' = 'auto' }
-                                        } -Header {
-                                            New-UDTypography -Text "Lab VMs: $($EventData.Lab)" -Variant h6
-                                        } -Footer {
-                                            New-UDButton -Text "Close" -Color primary -OnClick {
-                                                Hide-UDModal
-                                            }
-                                        } -FullWidth -MaxWidth 'lg'
-                                    } else {
-                                        Show-UDToast -Message "No VMs found in lab: $($EventData.Lab)" -MessageColor warning
-                                    }
-                                } catch {
-                                    Show-UDToast -Message "Error retrieving VM information: $($_.Exception.Message)" -MessageColor error
-                                }
-                            } -Icon (New-UDIcon -Icon list)
-                        
                             New-UDButton -Text "Details" -Color primary -Size small -Variant text -OnClick {
-                                $LabDetails = Get-PSULabConfiguration -Name $EventData.Lab
-                                Show-UDModal -Content {
-                                    New-UDCard -Content {
-                                        New-UDTypography -Variant h5 -Text "Lab Configuration Details" -Style @{ 'margin-bottom' = '20px'; 'color' = '#1976d2'; 'text-align' = 'center' }
-                                    
-                                        # Basic Information Section
+                                $labName = $null
+                                
+                                # Try different property names in order
+                                if (![string]::IsNullOrEmpty($EventData.Lab)) {
+                                    $labName = $EventData.Lab
+                                }
+                                elseif (![string]::IsNullOrEmpty($EventData.Name)) {
+                                    $labName = $EventData.Name
+                                }
+                                elseif (![string]::IsNullOrEmpty($EventData.LabName)) {
+                                    $labName = $EventData.LabName
+                                }
+                                elseif (![string]::IsNullOrEmpty($EventData.Definition)) {
+                                    $labName = $EventData.Definition
+                                }
+                                
+                                if (![string]::IsNullOrEmpty($labName)) {
+                                    $LabDetails = Get-PSULabConfiguration -Name $labName
+                                    Show-UDModal -Content {
                                         New-UDCard -Content {
-                                            New-UDTypography -Variant h6 -Text "Basic Information" -Style @{ 'margin-bottom' = '12px'; 'color' = '#424242' }
-                                            New-UDRow -Columns {
-                                                New-UDColumn -SmallSize 6 -Content {
-                                                    New-UDTypography -Text "Lab Name:" -Variant subtitle2 -Style @{ 'font-weight' = 'bold' }
-                                                    New-UDTypography -Text $LabDetails.Lab -Variant body1 -Style @{ 'margin-bottom' = '8px' }
+                                            New-UDTypography -Variant h5 -Text "Lab Configuration Details" -Style @{ 'margin-bottom' = '20px'; 'color' = '#1976d2'; 'text-align' = 'center' }
+                                        
+                                            # Basic Information Section
+                                            New-UDCard -Content {
+                                                New-UDTypography -Variant h6 -Text "Basic Information" -Style @{ 'margin-bottom' = '12px'; 'color' = '#424242' }
+                                                New-UDRow -Columns {
+                                                    New-UDColumn -SmallSize 6 -Content {
+                                                        New-UDTypography -Text "Lab Name:" -Variant subtitle2 -Style @{ 'font-weight' = 'bold' }
+                                                        New-UDTypography -Text $LabDetails.Lab -Variant body1 -Style @{ 'margin-bottom' = '8px' }
+                                                    }
+                                                    New-UDColumn -SmallSize 6 -Content {
+                                                        New-UDTypography -Text "Definition:" -Variant subtitle2 -Style @{ 'font-weight' = 'bold' }
+                                                        New-UDTypography -Text $LabDetails.Definition -Variant body1 -Style @{ 'margin-bottom' = '8px'; 'word-break' = 'break-word' }
+                                                    }
                                                 }
-                                                New-UDColumn -SmallSize 6 -Content {
-                                                    New-UDTypography -Text "Definition:" -Variant subtitle2 -Style @{ 'font-weight' = 'bold' }
-                                                    New-UDTypography -Text $LabDetails.Definition -Variant body1 -Style @{ 'margin-bottom' = '8px'; 'word-break' = 'break-word' }
-                                                }
+                                            } -Style @{ 'margin-bottom' = '16px'; 'background-color' = 'rgba(33, 150, 243, 0.04)'; 'padding' = '12px' }
+                                        
+                                            # Parameters Section
+                                            if ($LabDetails.Parameters -and $LabDetails.Parameters.Count -gt 0) {
+                                                New-UDCard -Content {
+                                                    New-UDTypography -Variant h6 -Text "Lab Parameters" -Style @{ 'margin-bottom' = '12px'; 'color' = '#424242' }
+                                                
+                                                    $ParamData = @()
+                                                    foreach ($key in $LabDetails.Parameters.Keys) {
+                                                        $ParamData += @{
+                                                            Name  = $key
+                                                            Value = $LabDetails.Parameters[$key]
+                                                        }
+                                                    }
+                                                
+                                                    New-UDTable -Data $ParamData -Columns @(
+                                                        New-UDTableColumn -Property Name -Title 'Parameter Name' -Render {
+                                                            New-UDTypography -Text $EventData.Name -Variant body2 -Style @{ 'font-weight' = '500'; 'color' = '#1976d2' }
+                                                        }
+                                                        New-UDTableColumn -Property Value -Title 'Parameter Value' -Render {
+                                                            New-UDChip -Label $EventData.Value -Color default -Variant outlined
+                                                        }
+                                                    ) -Dense
+                                                } -Style @{ 'background-color' = 'rgba(76, 175, 80, 0.04)'; 'padding' = '12px' }
                                             }
-                                        } -Style @{ 'margin-bottom' = '16px'; 'background-color' = 'rgba(33, 150, 243, 0.04)'; 'padding' = '12px' }
-                                    
-                                        # Parameters Section
-                                        if ($LabDetails.Parameters -and $LabDetails.Parameters.Count -gt 0) {
-                                            New-UDCard -Content {
-                                                New-UDTypography -Variant h6 -Text "Lab Parameters" -Style @{ 'margin-bottom' = '12px'; 'color' = '#424242' }
-                                            
-                                                $ParamData = @()
-                                                foreach ($key in $LabDetails.Parameters.Keys) {
-                                                    $ParamData += @{
-                                                        Name  = $key
-                                                        Value = $LabDetails.Parameters[$key]
-                                                    }
-                                                }
-                                            
-                                                New-UDTable -Data $ParamData -Columns @(
-                                                    New-UDTableColumn -Property Name -Title 'Parameter Name' -Render {
-                                                        New-UDTypography -Text $EventData.Name -Variant body2 -Style @{ 'font-weight' = '500'; 'color' = '#1976d2' }
-                                                    }
-                                                    New-UDTableColumn -Property Value -Title 'Parameter Value' -Render {
-                                                        New-UDChip -Label $EventData.Value -Color default -Variant outlined
-                                                    }
-                                                ) -Dense
-                                            } -Style @{ 'background-color' = 'rgba(76, 175, 80, 0.04)'; 'padding' = '12px' }
+                                            else {
+                                                New-UDCard -Content {
+                                                    New-UDTypography -Variant h6 -Text "Lab Parameters" -Style @{ 'margin-bottom' = '8px'; 'color' = '#424242' }
+                                                    New-UDTypography -Text "No parameters configured for this lab." -Variant body2 -Style @{ 'font-style' = 'italic'; 'opacity' = '0.7'; 'text-align' = 'center' }
+                                                } -Style @{ 'background-color' = 'rgba(158, 158, 158, 0.04)'; 'padding' = '12px' }
+                                            }
+                                        } -Style @{ 'max-width' = '600px'; 'margin' = 'auto' }
+                                    } -Header {
+                                        New-UDTypography -Text "Lab Details: $labName" -Variant h6
+                                    } -Footer {
+                                        New-UDButton -Text "Close" -Color primary -OnClick {
+                                            Hide-UDModal
                                         }
-                                        else {
-                                            New-UDCard -Content {
-                                                New-UDTypography -Variant h6 -Text "Lab Parameters" -Style @{ 'margin-bottom' = '8px'; 'color' = '#424242' }
-                                                New-UDTypography -Text "No parameters configured for this lab." -Variant body2 -Style @{ 'font-style' = 'italic'; 'opacity' = '0.7'; 'text-align' = 'center' }
-                                            } -Style @{ 'background-color' = 'rgba(158, 158, 158, 0.04)'; 'padding' = '12px' }
-                                        }
-                                    } -Style @{ 'max-width' = '600px'; 'margin' = 'auto' }
-                                } -Header {
-                                    New-UDTypography -Text "Lab Details: $($EventData.Lab)" -Variant h6
-                                } -Footer {
-                                    New-UDButton -Text "Close" -Color primary -OnClick {
-                                        Hide-UDModal
-                                    }
-                                } -FullWidth -MaxWidth 'md'
+                                    } -FullWidth -MaxWidth 'md'
+                                } else {
+                                    Show-UDToast -Message "Unable to determine lab name" -MessageColor error
+                                }
                             } -Icon (New-UDIcon -Icon info-circle)
                         }
                     }
@@ -221,7 +192,95 @@
             
                 New-UDCard -Content {
                     New-UDTypography -Variant h6 -Text "Available Labs" -Style @{ 'margin-bottom' = '16px' }
-                    New-UDTable -Data $labs -Columns $Columns -Dense -ShowSearch -ShowPagination -PageSize 10
+                    New-UDTable -Data $labs  -Columns $Columns -Dense -ShowSearch -ShowPagination -PageSize 10 -OnRowExpand {
+                        try {
+                            Show-UDToast -Message "Expanding lab details for: $($EventData.Lab)" -MessageColor info -Duration 3000
+                            
+                            $labName = $EventData.Lab
+                            
+                            if ([string]::IsNullOrEmpty($labName)) {
+                                New-UDCard -Content {
+                                    New-UDStack -Direction column -AlignItems center -Spacing 2 -Content {
+                                        New-UDIcon -Icon exclamation-triangle -Size lg -Color warning
+                                        New-UDTypography -Text "No lab name found" -Variant body2 -Style @{ 'opacity' = '0.7'; 'text-align' = 'center' }
+                                        New-UDTypography -Text "Unable to determine lab name from data" -Variant caption -Style @{ 'opacity' = '0.5'; 'text-align' = 'center' }
+                                    }
+                                } -Style @{ 'padding' = '20px'; 'text-align' = 'center' }
+                                return
+                            }
+                            
+                            # Use Get-PSULabInfo to get VM data
+                            $LabVMs = Get-PSULabInfo -LabName $labName -ErrorAction SilentlyContinue | Select ProcessorCount,Memory,OperatingSystem,MemoryGB,Status,@{N='LabName'; E = {$_.Name}}
+                            if ($LabVMs -and $LabVMs.Count -gt 0) {
+                                # Create a table showing individual VM rows
+                                New-UDTable -Data $LabVMs -Columns @(
+                                    New-UDTableColumn -Property Name -Title 'VM Name' -Render {
+                                        New-UDStack -Direction row -Spacing 1 -AlignItems center -Content {
+                                            New-UDIcon -Icon desktop -Size sm -Color primary
+                                            New-UDTypography -Text $EventData.LabName -Variant body2 -Style @{ 'font-weight' = '500' }
+                                        }
+                                    }
+                                    New-UDTableColumn -Property ProcessorCount -Title 'CPUs' -Render {
+                                        New-UDChip -Label "$($EventData.ProcessorCount)" -Color success -Variant outlined -Icon (New-UDIcon -Icon microchip)
+                                    }
+                                    New-UDTableColumn -Property MemoryGB -Title 'Memory (GB)' -Render {
+                                        New-UDChip -Label "$($EventData.MemoryGB) GB" -Color info -Variant outlined -Icon (New-UDIcon -Icon memory)
+                                    }
+                                    New-UDTableColumn -Property Status -Title 'Status' -Render {
+                                        $statusColor = switch ($EventData.Status) {
+                                            'Running' { 'success' }
+                                            'Stopped' { 'error' }
+                                            'Starting' { 'warning' }
+                                            'Stopping' { 'warning' }
+                                            default { 'default' }
+                                        }
+                                        $statusIcon = switch ($EventData.Status) {
+                                            'Running' { 'play-circle' }
+                                            'Stopped' { 'stop-circle' }
+                                            'Starting' { 'clock' }
+                                            'Stopping' { 'clock' }
+                                            default { 'question-circle' }
+                                        }
+                                        New-UDChip -Label $EventData.Status -Color $statusColor -Variant default -Icon (New-UDIcon -Icon $statusIcon)
+                                    }
+                                    New-UDTableColumn -Property OperatingSystem -Title 'Operating System' -Render {
+                                        New-UDStack -Direction row -Spacing 1 -AlignItems center -Content {
+                                            New-UDIcon -Icon windows -Size sm -Color info
+                                            New-UDTypography -Text $EventData.OperatingSystem -Variant body2 -Style @{ 'max-width' = '250px'; 'word-wrap' = 'break-word' }
+                                        }
+                                    }
+                                    New-UDTableColumn -Property Actions -Title 'VM Actions' -Render {
+                                        New-UDStack -Direction row -Spacing 1 -Content {
+                                            New-UDButton -Text "Start" -Color success -Size small -Variant outlined -OnClick {
+                                                Show-UDToast -Message "Starting VM: $($EventData.Name)" -MessageColor info
+                                                # Add VM start logic here
+                                            } -Icon (New-UDIcon -Icon play)
+                                            New-UDButton -Text "Stop" -Color error -Size small -Variant outlined -OnClick {
+                                                Show-UDToast -Message "Stopping VM: $($EventData.Name)" -MessageColor info
+                                                # Add VM stop logic here
+                                            } -Icon (New-UDIcon -Icon stop)
+                                        }
+                                    }
+                                ) -Dense -ShowSearch -PageSize 10 -Size small -Title "Virtual Machines in $labName"
+                            } else {
+                                New-UDCard -Content {
+                                    New-UDStack -Direction column -AlignItems center -Spacing 2 -Content {
+                                        New-UDIcon -Icon exclamation-triangle -Size lg -Color warning
+                                        New-UDTypography -Text "No VMs found in this lab" -Variant body2 -Style @{ 'opacity' = '0.7'; 'text-align' = 'center' }
+                                        New-UDTypography -Text "The lab may not be imported or may be empty" -Variant caption -Style @{ 'opacity' = '0.5'; 'text-align' = 'center' }
+                                    }
+                                } -Style @{ 'padding' = '20px'; 'text-align' = 'center' }
+                            }
+                        } catch {
+                            New-UDCard -Content {
+                                New-UDStack -Direction column -AlignItems center -Spacing 2 -Content {
+                                    New-UDIcon -Icon times-circle -Size lg -Color error
+                                    New-UDTypography -Text "Error loading VM information" -Variant body2 -Style @{ 'color' = '#d32f2f'; 'text-align' = 'center' }
+                                    New-UDTypography -Text $_.Exception.Message -Variant caption -Style @{ 'opacity' = '0.7'; 'text-align' = 'center'; 'max-width' = '400px'; 'word-wrap' = 'break-word' }
+                                }
+                            } -Style @{ 'padding' = '20px'; 'text-align' = 'center' }
+                        }
+                    }
                 } -Style @{ 'box-shadow' = '0 4px 6px rgba(0, 0, 0, 0.1)' }
             }
             else {
