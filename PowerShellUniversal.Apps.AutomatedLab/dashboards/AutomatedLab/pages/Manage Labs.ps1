@@ -21,9 +21,10 @@ $ManageLabsPage = New-UDPage -Url "/Manage-Labs" -Name "Manage Labs" -Content {
     # Labs table section
     New-UDRow -Columns {
         New-UDColumn -SmallSize 12 -Content {
-            $labs = Get-PSULabConfiguration
+            New-UDDynamic -Id "LabsContent" -Content {
+                $labs = Get-PSULabConfiguration
 
-            if ($labs -and $labs.Count -gt 0) {
+                if ($labs -and $labs.Count -gt 0) {
                 $Columns = @(
                     New-UDTableColumn -Property Lab -Title "Lab Name" -Render {
                         New-UDStack -Direction row -Spacing 1 -AlignItems center -Content {
@@ -74,9 +75,8 @@ $ManageLabsPage = New-UDPage -Url "/Manage-Labs" -Name "Manage Labs" -Content {
                                 if (![string]::IsNullOrEmpty($labName)) {
                                     $psuscript = Get-PSUScript -Name 'Start-Lab.ps1' -AppToken $Secret:AU_Token -TrustCertificate
                                     Invoke-PSUScript -Script $psuscript -Parameters @{LabName = $labName } -AppToken $Secret:AU_Token -TrustCertificate
-                                    Show-UDToast -Message "Starting lab: $labName" -MessageColor info
                                 } else {
-                                    Show-UDToast -Message "Unable to determine lab name" -MessageColor error
+                                    Show-UDToast -Message "Unable to determine lab name"
                                 }
                             } -Icon (New-UDIcon -Icon play)
                         
@@ -101,9 +101,8 @@ $ManageLabsPage = New-UDPage -Url "/Manage-Labs" -Name "Manage Labs" -Content {
                                 if (![string]::IsNullOrEmpty($labName)) {
                                     $psuscript = Get-PSUScript -Name 'Stop-Lab.ps1' -AppToken $Secret:AU_Token -TrustCertificate
                                     Invoke-PSUScript -Script $psuscript -Parameters @{LabName = $labName } -AppToken $Secret:AU_Token -TrustCertificate
-                                    Show-UDToast -Message "Stopping lab: $labName" -MessageColor info
                                 } else {
-                                    Show-UDToast -Message "Unable to determine lab name" -MessageColor error
+                                    Show-UDToast -Message "Unable to determine lab name"
                                 }
                             } -Icon (New-UDIcon -Icon stop)
                         
@@ -183,19 +182,17 @@ $ManageLabsPage = New-UDPage -Url "/Manage-Labs" -Name "Manage Labs" -Content {
                                         }
                                     } -FullWidth -MaxWidth 'md'
                                 } else {
-                                    Show-UDToast -Message "Unable to determine lab name" -MessageColor error
+                                    Show-UDToast -Message "Unable to determine lab name"
                                 }
                             } -Icon (New-UDIcon -Icon info-circle)
                         }
                     }
                 )
             
-                New-UDCard -Content {
-                    New-UDTypography -Variant h6 -Text "Available Labs" -Style @{ 'margin-bottom' = '16px' }
+                    New-UDCard -Content {
+                        New-UDTypography -Variant h6 -Text "Available Labs" -Style @{ 'margin-bottom' = '16px' }
                     New-UDTable -Data $labs  -Columns $Columns -Dense -ShowSearch -ShowPagination -PageSize 10 -OnRowExpand {
                         try {
-                            Show-UDToast -Message "Expanding lab details for: $($EventData.Lab)" -MessageColor info -Duration 3000
-                            
                             $labName = $EventData.Lab
                             
                             if ([string]::IsNullOrEmpty($labName)) {
@@ -210,7 +207,7 @@ $ManageLabsPage = New-UDPage -Url "/Manage-Labs" -Name "Manage Labs" -Content {
                             }
                             
                             # Use Get-PSULabInfo to get VM data
-                            $LabVMs = Get-PSULabInfo -LabName $labName -ErrorAction SilentlyContinue | Select ProcessorCount,Memory,OperatingSystem,MemoryGB,Status,@{N='LabName'; E = {$_.Name}}
+                            $LabVMs = Get-PSULabInfo -LabName $labName -ErrorAction SilentlyContinue | Select-Object ProcessorCount,Memory,OperatingSystem,MemoryGB,Status,@{N='LabName'; E = {$_.Name}}
                             if ($LabVMs -and $LabVMs.Count -gt 0) {
                                 # Create a table showing individual VM rows
                                 New-UDTable -Data $LabVMs -Columns @(
@@ -252,11 +249,9 @@ $ManageLabsPage = New-UDPage -Url "/Manage-Labs" -Name "Manage Labs" -Content {
                                     New-UDTableColumn -Property Actions -Title 'VM Actions' -Render {
                                         New-UDStack -Direction row -Spacing 1 -Content {
                                             New-UDButton -Text "Start" -Color success -Size small -Variant outlined -OnClick {
-                                                Show-UDToast -Message "Starting VM: $($EventData.Name)" -MessageColor info
                                                 # Add VM start logic here
                                             } -Icon (New-UDIcon -Icon play)
                                             New-UDButton -Text "Stop" -Color error -Size small -Variant outlined -OnClick {
-                                                Show-UDToast -Message "Stopping VM: $($EventData.Name)" -MessageColor info
                                                 # Add VM stop logic here
                                             } -Icon (New-UDIcon -Icon stop)
                                         }
@@ -282,23 +277,32 @@ $ManageLabsPage = New-UDPage -Url "/Manage-Labs" -Name "Manage Labs" -Content {
                         }
                     }
                 } -Style @{ 'box-shadow' = '0 4px 6px rgba(0, 0, 0, 0.1)' }
-            }
-            else {
-                # Empty state
-                New-UDCard -Content {
-                    New-UDStack -Direction column -Spacing 2 -AlignItems center -Content {
-                        New-UDIcon -Icon exclamation-triangle -Size '3x' -Color warning -Style @{ 'opacity' = '0.6' }
-                        New-UDTypography -Variant h6 -Text "No Labs Found" -Align center
-                        New-UDTypography -Variant body2 -Text "Create your first lab configuration to get started." -Align center -Style @{ 'opacity' = '0.7' }
-                        New-UDButton -Text "Create New Lab" -Color primary -Variant contained -OnClick {
-                            Invoke-UDRedirect -Url '/New-Lab'
-                        } -Icon (New-UDIcon -Icon plus)
-                    }
-                } -Style @{ 
-                    'text-align' = 'center'
-                    'padding'    = '40px'
-                    'border'     = '2px dashed rgba(0,0,0,0.12)'
                 }
+                else {
+                    # Empty state
+                    New-UDCard -Content {
+                        New-UDStack -Direction column -Spacing 2 -AlignItems center -Content {
+                            New-UDIcon -Icon exclamation-triangle -Size '3x' -Color warning -Style @{ 'opacity' = '0.6' }
+                            New-UDTypography -Variant h6 -Text "No Labs Found" -Align center
+                            New-UDTypography -Variant body2 -Text "Create your first lab configuration to get started." -Align center -Style @{ 'opacity' = '0.7' }
+                            New-UDButton -Text "Create New Lab" -Color primary -Variant contained -OnClick {
+                                Invoke-UDRedirect -Url '/New-Lab'
+                            } -Icon (New-UDIcon -Icon plus)
+                        }
+                    } -Style @{ 
+                        'text-align' = 'center'
+                        'padding'    = '40px'
+                        'border'     = '2px dashed rgba(0,0,0,0.12)'
+                    }
+                }
+            } -LoadingComponent {
+                New-UDCard -Content {
+                    New-UDStack -Direction column -AlignItems center -Spacing 3 -Content {
+                        New-UDProgress -Circular -Color primary -Size large
+                        New-UDTypography -Text "Loading lab configurations..." -Variant h6 -Align center
+                        New-UDTypography -Text "Please wait while we retrieve your lab information." -Variant body2 -Align center -Style @{ 'opacity' = '0.7' }
+                    }
+                } -Style @{ 'padding' = '60px'; 'text-align' = 'center'; 'min-height' = '300px' }
             }
         }
     }
