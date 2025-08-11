@@ -94,7 +94,24 @@ AliasesToExport = '*'
 # ModuleList = @()
 
 # List of all files packaged with this module
-FileList = @(".universal\dashboards.ps1")
+FileList = @(
+    "PowerShellUniversal.Apps.AutomatedLab.psm1",
+    "PowerShellUniversal.Apps.AutomatedLab.psd1",
+    ".universal\dashboards.ps1",
+    ".universal\scripts.ps1",
+    "dashboards\AutomatedLab\AutomatedLab.ps1",
+    "dashboards\AutomatedLab\pages\Custom Roles.ps1",
+    "dashboards\AutomatedLab\pages\Home.ps1",
+    "dashboards\AutomatedLab\pages\Manage ISOs.ps1",
+    "dashboards\AutomatedLab\pages\Manage Labs.ps1",
+    "dashboards\AutomatedLab\pages\New Definition.ps1",
+    "dashboards\AutomatedLab\pages\New Lab.ps1",
+    "dashboards\AutomatedLab\pages\Testing.ps1",
+    "Start-Lab.ps1",
+    "Start-SingleVM.ps1",
+    "Stop-Lab.ps1",
+    "Stop-SingleVM.ps1"
+)
 
 # Private data to pass to the module specified in RootModule/ModuleToProcess. This may also contain a PSData hashtable with additional module metadata used by PowerShell.
 PrivateData = @{
