@@ -2,9 +2,9 @@
 Param(
     [Parameter(Mandatory)]
     [String]
-    $LabName
+    $LabVM
 )
 
 end {
-    Start-Lab -Name $LabName
+    Start-LWHypervVM -ComputerName $LabVM -TimeoutInMinutes 5
 }

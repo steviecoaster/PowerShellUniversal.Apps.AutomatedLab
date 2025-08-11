@@ -6,5 +6,5 @@ Param(
 )
 
 end {
-    Stop-Lab -Name $LabName
+    Start-Lab -Name $LabName -ErrorAction SilentlyContinue
 }
