@@ -21,14 +21,11 @@ Once you have an AutomatedLab script, you use this thing to manage the lab, and 
 - [Configuration module (v1.6.0+)](https://github.com/PoshCode/Configuration)
 - [PowerShell Universal 5.0+](https://powershelluniversal.com) - the unlicensed version is fine!
 
-
 ## Installation
 
 ### From PowerShell Gallery
 
-_Coming Soon_
-
-~~You can install this module from the PowerShell Gallery directly inside PowerShell Universal. See [the PSU docs](https://docs.powershelluniversal.com/platform/modules#install-modules-from-the-gallery) for instructions.~~
+You can install this module from the PowerShell Gallery directly inside PowerShell Universal. See [the PSU docs](https://docs.powershelluniversal.com/platform/modules#install-modules-from-the-gallery) for instructions.
 
 ### Manual Installation
 
