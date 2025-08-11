@@ -70,7 +70,7 @@ function Get-PSULabConfiguration {
             if (Test-Path $configPath) {
                 Get-ChildItem -Path $configPath -Directory | ForEach-Object {
                     $config = Import-Configuration -Name $_.Name -CompanyName $env:USERNAME
-                    $config.Add('Lab',$_.Name)
+                    $config.Add('Lab', $_.Name)
                     $config | Split-Configuration
                 }
             }
@@ -97,7 +97,7 @@ function Split-Configuration {
     #>
     [CmdletBinding()]
     Param(
-        [Parameter(Mandatory,ValueFromPipeline)]
+        [Parameter(Mandatory, ValueFromPipeline)]
         [Hashtable]
         $InputObject
     )
@@ -105,7 +105,7 @@ function Split-Configuration {
     process {
         $newHash = @{}
 
-        $newHash.Defintion = $InputObject['Definition']
+        $newHash.Definition = $InputObject['Definition']
         $newHash.Lab = $InputObject['Lab']
         $parameters = $InputObject['Parameters']
         $parameters.GetEnumerator() | ForEach-Object {
@@ -115,6 +115,65 @@ function Split-Configuration {
         }
 
         [PSCustomObject]$newHash
+    }
+}
+
+function Get-PSULabInfo {
+    <#
+    .SYNOPSIS
+    Gets virtual machine information for a specific lab using PowerShell Universal context
+    
+    .DESCRIPTION
+    This function imports an AutomatedLab by name and returns information about each machine
+    including the name, processor count, memory, and operating system. This version is optimized
+    for use within PowerShell Universal dashboards.
+    
+    .PARAMETER LabName
+    The name of the lab to import and analyze.
+    
+    .EXAMPLE
+    Get-PSULabInfo -LabName "MyTestLab"
+    
+    .NOTES
+    This function requires the AutomatedLab module to be installed and available.
+    #>
+    
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true, Position = 0)]
+        [string]$LabName
+    )
+    
+    try {
+        Write-Verbose "Importing lab: $LabName"
+        # Import the lab without validation to speed up the process
+        Import-Lab -Name $LabName -NoValidation -NoDisplay | Out-Null
+
+        $machines = Get-LabVM
+        $status = Get-LabVMStatus -AsHashTable
+        
+        if (-not $machines) {
+            Write-Warning "No machines found in lab '$LabName'"
+            return @()
+        }
+        
+        $labInfo = foreach ($machine in $machines) {
+            [PSCustomObject]@{
+                Name            = $machine.Name
+                ProcessorCount  = $machine.Processors
+                Memory          = $machine.Memory
+                OperatingSystem = $machine.OperatingSystem.OperatingSystemName
+                MemoryGB        = [Math]::Round($machine.Memory / 1GB, 2)
+                Status          = $status[$machine.Name]
+            }
+        }
+        
+        Write-Verbose "Retrieved information for $($labInfo.Count) machines"
+        return $labInfo
+    }
+    catch {
+        Write-Error "Failed to import lab '$LabName': $($_.Exception.Message)"
+        return @()
     }
 }
 
@@ -144,17 +203,17 @@ function Get-LabInfo {
     param(
         [Parameter(Mandatory = $true, Position = 0)]
         [ArgumentCompleter({
-            param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
-            try {
-                $availableLabs = Get-Lab -List
-                $availableLabs | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
-                    [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
+                param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+                try {
+                    $availableLabs = Get-Lab -List
+                    $availableLabs | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
+                        [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
+                    }
                 }
-            }
-            catch {
-                @()
-            }
-        })]
+                catch {
+                    @()
+                }
+            })]
         [string]$LabName
     )
     
@@ -173,12 +232,12 @@ function Get-LabInfo {
         
         $labInfo = foreach ($machine in $machines) {
             [PSCustomObject]@{
-                Name = $machine.Name
-                ProcessorCount = $machine.Processors
-                Memory = $machine.Memory
+                Name            = $machine.Name
+                ProcessorCount  = $machine.Processors
+                Memory          = $machine.Memory
                 OperatingSystem = $machine.OperatingSystem.OperatingSystemName
-                MemoryGB = [Math]::Round($machine.Memory / 1GB, 2)
-                Status = $status[$machine.Name]
+                MemoryGB        = [Math]::Round($machine.Memory / 1GB, 2)
+                Status          = $status[$machine.Name]
             }
         }
         
@@ -192,9 +251,15 @@ function Get-LabInfo {
 }
 
 function New-AutomatedLabDefinitionScript {
-    param([hashtable]$LabData)
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [hashtable]
+        $LabData
+    )
     
-    $script = @"
+    process {
+        $script = @"
 # AutomatedLab Definition: $($LabData.LabName)
 # Generated: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
 
@@ -204,26 +269,26 @@ New-LabDefinition -Name '$($LabData.LabName)' -DefaultVirtualizationEngine Hyper
 
 "@
 
-    # Add virtual switches
-    foreach ($network in $LabData.Networks) {
-        switch ($network.SwitchType) {
-            'DefaultSwitch' {
-                $script += "Add-LabVirtualNetworkDefinition -Name 'Default Switch' -HyperVProperties @{ SwitchType = 'External'; AdapterName = 'Default Switch' }`n"
-            }
-            'Internal' {
-                $script += "Add-LabVirtualNetworkDefinition -Name '$($network.Name)' -AddressSpace '$($network.Subnet)'"
-                if ($network.Gateway) { 
-                    $script += " -HyperVProperties @{ SwitchType = 'Internal' }" 
+        # Add virtual switches
+        foreach ($network in $LabData.Networks) {
+            switch ($network.SwitchType) {
+                'DefaultSwitch' {
+                    $script += "Add-LabVirtualNetworkDefinition -Name 'Default Switch'`n"
                 }
-                $script += "`n"
-            }
-            'External' {
-                $script += "Add-LabVirtualNetworkDefinition -Name '$($network.Name)' -HyperVProperties @{ SwitchType = 'External'; AdapterName = '$($network.PhysicalAdapter)' }`n"
+                'Internal' {
+                    $script += "Add-LabVirtualNetworkDefinition -Name '$($network.Name)' -AddressSpace '$($network.Subnet)'"
+                    if ($network.Gateway) { 
+                        $script += " -HyperVProperties @{ SwitchType = 'Internal' }" 
+                    }
+                    $script += "`n"
+                }
+                'External' {
+                    $script += "Add-LabVirtualNetworkDefinition -Name '$($network.Name)' -HyperVProperties @{ SwitchType = 'External'; AdapterName = '$($network.PhysicalAdapter)' }`n"
+                }
             }
         }
-    }
 
-    $script += "`n"
+        $script += "`n"
 
     # Add VMs
     foreach ($vm in $LabData.VMs) {
@@ -231,20 +296,30 @@ New-LabDefinition -Name '$($LabData.LabName)' -DefaultVirtualizationEngine Hyper
         
         if ($vm.NetworkAdapters -and $vm.NetworkAdapters.Count -gt 0) {
             $adapters = $vm.NetworkAdapters | ForEach-Object {
-                "New-LabNetworkAdapterDefinition -VirtualSwitch '$($_.VirtualSwitch)'"
+                $adapterDef = "New-LabNetworkAdapterDefinition -VirtualSwitch '$($_.VirtualSwitch)'"
+                if ($_.InterfaceName) {
+                    $adapterDef += " -InterfaceName '$($_.InterfaceName)'"
+                }
+                if ($_.IpAddress -and ![string]::IsNullOrEmpty($_.IpAddress)) {
+                    $adapterDef += " -IpAddress '$($_.IpAddress)'"
+                }
+                if ($_.UseDhcp -eq $false -and $_.IpAddress) {
+                    # Static IP configuration - don't add UseDhcp parameter as it defaults to false when IpAddress is specified
+                } else {
+                    # DHCP configuration
+                    $adapterDef += " -UseDhcp"
+                }
+                $adapterDef
             }
             $script += " -NetworkAdapter @($($adapters -join ', '))"
         }
         $script += "`n"
-    }
-
-    $script += @"
+    }        $script += @"
 
 Install-Lab
 
-Write-Host "Lab '$($LabData.LabName)' deployed successfully!" -ForegroundColor Green
-Show-LabDeploymentSummary
 "@
 
-    return $script
+        return $script
+    }
 }
