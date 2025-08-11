@@ -1,14 +1,14 @@
 $DefinitionPage = New-UDPage -Url '/New-Definition' -Name 'New Definition' -Content {
     
-# Force reset of session variables on page load
-$Session:Networks = [System.Collections.Generic.List[PSCustomObject]]::new()
-$Session:VMs = @()
-$Session:AvailableOS = @()
-$Session:OSLoaded = $false
-$Session:LabName = ""
-$Session:LabDescription = ""
+    # Force reset of session variables on page load
+    $Session:Networks = [System.Collections.Generic.List[PSCustomObject]]::new()
+    $Session:VMs = @()
+    $Session:AvailableOS = @()
+    $Session:OSLoaded = $false
+    $Session:LabName = ""
+    $Session:LabDescription = ""
 
-New-UDContainer -Content {
+    New-UDContainer -Content {
         New-UDTypography -Text "AutomatedLab Definition Builder" -Variant h3 -Align center
         New-UDDivider
 
@@ -95,7 +95,7 @@ New-UDContainer -Content {
                                             }
                                 
                                             $newNetwork = @{
-                                                Name = $networkName
+                                                Name       = $networkName
                                                 SwitchType = $switchType
                                             }
                                 
@@ -172,9 +172,9 @@ New-UDContainer -Content {
                                         }
                             
                                         $defaultSwitch = @{
-                                            Name = "Default Switch"
-                                            SwitchType = "DefaultSwitch"
-                                            Subnet = "Default Switch NAT"
+                                            Name            = "Default Switch"
+                                            SwitchType      = "DefaultSwitch"
+                                            Subnet          = "Default Switch NAT"
                                             IsDefaultSwitch = $true
                                         }
                             
@@ -202,13 +202,19 @@ New-UDContainer -Content {
                                             }
                                         }
                                         New-UDTableColumn -Property "Subnet" -Title "Address Space/Network"
-                                        New-UDTableColumn -Property "Name" -Title "Actions" -Render {
-                                            New-UDButton -Text "Remove" -Size small -OnClick {
-                                                $selectedNetwork = $EventData.Name
-                                                $Session:Networks = $Session:Networks | Where-Object { $_.Name -ne $selectedNetwork }
-                                                Sync-UDElement -Id "NetworkList"
-                                                Show-UDToast -Message "Virtual switch '$selectedNetwork' removed!"
-                                            } -Color secondary
+                                        New-UDTableColumn -Property Actions -Title "Actions" -Render {
+                                            New-UDStack -Direction row -Spacing 1 -Content {
+                                                New-UDButton -Text "Remove" -Size small -OnClick {
+                                                    $selectedNetwork = $EventData.Name
+                                                    # Properly remove from List object
+                                                    $itemToRemove = $Session:Networks | Where-Object { $_.Name -eq $selectedNetwork }
+                                                    if ($itemToRemove) {
+                                                        $Session:Networks.Remove($itemToRemove)
+                                                    }
+                                                    Sync-UDElement -Id "NetworkList"
+                                                } -Color error -Icon (New-UDIcon -Icon trash)
+                                            }
+                                           
                                         }
                                     )
                                 }
@@ -352,19 +358,21 @@ New-UDContainer -Content {
                                                                 New-UDTableColumn -Property "UseDhcp" -Title "IP Configuration" -Render {
                                                                     if ($EventData.UseDhcp) { 
                                                                         "DHCP" 
-                                                                    } else { 
+                                                                    }
+                                                                    else { 
                                                                         $staticConfig = @()
                                                                         if ($EventData.IpAddress) { $staticConfig += "IP: $($EventData.IpAddress)" }
                                                                         if ($EventData.Gateway) { $staticConfig += "GW: $($EventData.Gateway)" }
                                                                         if ($EventData.DnsServer) { $staticConfig += "DNS: $($EventData.DnsServer)" }
                                                                         if ($staticConfig.Count -gt 0) {
                                                                             $staticConfig -join " | "
-                                                                        } else {
+                                                                        }
+                                                                        else {
                                                                             "Static (no config)"
                                                                         }
                                                                     }
                                                                 }
-                                                                New-UDTableColumn -Property "InterfaceName" -Title "Actions" -Render {
+                                                                New-UDTableColumn -Property Actions -Title "Actions" -Render {
                                                                     New-UDButton -Text "Remove" -Size small -Color error -OnClick {
                                                                         $interfaceToRemove = $EventData.InterfaceName
                                                                         $Session:CurrentVMNICs = $Session:CurrentVMNICs | Where-Object { $_.InterfaceName -ne $interfaceToRemove }
@@ -475,13 +483,13 @@ New-UDContainer -Content {
                                                 New-UDTypography -Text "None" -Variant caption -Style @{ 'color' = 'red' }
                                             }
                                         }
-                                        New-UDTableColumn -Property "Name" -Title "Actions" -Render {
+                                        New-UDTableColumn -Property Actions -Title "Actions" -Render {
                                             New-UDButton -Text "Remove" -Size small -OnClick {
                                                 $selectedVM = $EventData.Name
                                                 $Session:VMs = $Session:VMs | Where-Object { $_.Name -ne $selectedVM }
                                                 Sync-UDElement -Id "VMList"
                                                 Show-UDToast -Message "VM '$selectedVM' removed!"
-                                            } -Color secondary
+                                            } -Color error -Icon (New-UDIcon -Icon trash)
                                         }
                                     )
                                 }
