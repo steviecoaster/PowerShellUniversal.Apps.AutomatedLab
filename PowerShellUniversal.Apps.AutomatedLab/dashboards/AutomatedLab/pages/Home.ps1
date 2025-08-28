@@ -79,9 +79,29 @@
         }
     }
 
+    New-UDRow -Columns {
+        New-UDColumn -SmallSize 12 -MediumSize 6 -LargeSize 4 -Content {
+            New-UDCard -Title "New Definition" -Content {
+                New-UDStack -Direction row -Spacing 2 -Content {
+                    New-UDIcon -Icon 'file-code' -Size lg
+                    New-UDTypography -Text "Definition Builder" -Variant body1
+                }
+                New-UDButton -Text "Create Definition" -Color primary -OnClick {
+                    # Add your VM management logic here
+                    Invoke-UDRedirect -Url '/New-Definition'
+                }
+            } -Style @{
+                'text-align' = 'center'
+                'margin'     = '10px'
+            }
+        }
+    }
+
+
+
     # Footer
     New-UDElement -Tag div -Attributes @{ style = @{ 'position' = 'fixed'; 'bottom' = '0'; 'left' = '0'; 'right' = '0'; 'z-index' = '1000' } } -Content {
-        New-UDTypography -Text "AutomatedLab UI v1.0.0" -Variant caption -Align center -Style @{
+        New-UDTypography -Text "AutomatedLab UI v1.1.0" -Variant caption -Align center -Style @{
             'padding'          = '8px 16px'
             'opacity'          = '0.7'
             'background-color' = 'rgba(0,0,0,0.05)'

@@ -26,7 +26,6 @@ $DefinitionPage = New-UDPage -Url '/New-Definition' -Name 'New Definition' -Cont
             else {
                 # Stepper Component (only shown after OS data is loaded)
                 New-UDStepper -Id "LabBuilderStepper" -OnFinish {
-                    Show-UDToast -Message "Lab definition process completed!"
                 } -Steps {
         
                     # Step 1: Lab Information
@@ -555,8 +554,11 @@ $DefinitionPage = New-UDPage -Url '/New-Definition' -Name 'New Definition' -Cont
                                         $vmCount = ($Session:VMs | Measure-Object).Count
                                         if ($networkCount -gt 0 -and $vmCount -gt 0) {
                                             New-UDGrid -Container -Content {
+                                                New-UDGrid -Item -ExtraSmallSize 12 -Content {
+                                                    New-UDCheckBox -Id "SaveLabCheckbox" -Label "Save to lab configuration directory" -LabelPlacement end
+                                                }
                                                 New-UDGrid -Item -ExtraSmallSize 12 -SmallSize 6 -Content {
-                                                    New-UDButton -Text "Generate & Download Lab Definition" -Color primary -FullWidth -OnClick {
+                                                    New-UDButton -Text "Generate & Download Lab Definition" -Color primary -OnClick {
                                                         $labData = @{
                                                             LabName     = if (![string]::IsNullOrEmpty($Session:LabName)) { $Session:LabName } else { "Lab_$(Get-Date -Format 'yyyyMMdd_HHmmss')" }
                                                             Networks    = $Session:Networks
@@ -565,15 +567,32 @@ $DefinitionPage = New-UDPage -Url '/New-Definition' -Name 'New Definition' -Cont
                                                         }
                                             
                                                         $definitionContent = New-AutomatedLabDefinitionScript -LabData $labData
-                                            
                                                         $fileName = "AutomatedLab_$($labData.LabName.Replace(' ', '_'))_$(Get-Date -Format 'yyyyMMdd_HHmmss').ps1"
+                                                        
+                                                        # Check if user wants to save to lab configuration directory
+                                                        $saveLab = (Get-UDElement -Id "SaveLabCheckbox").checked
+                                                        
+                                                        if ($saveLab) {
+                                                            try {
+                                                                $configurationParameters = @{
+                                                                    Name        = $Session:LabName
+                                                                    Scriptblock = [scriptblock]::Create($definitionContent)
+                                                                }
+                                                                New-LabConfiguration @configurationParameters
+                                                            }
+                                                            catch {
+                                                                Show-UDToast -Message "Error saving lab definition: $($_.Exception.Message)" -Duration 5000
+                                                            }
+                                                        }
+                                                        
+                                                        # Always download the file
                                                         Start-UDDownload -StringData $definitionContent -FileName $fileName -ContentType "text/plain"
                                             
                                                         Show-UDToast -Message "Lab definition '$fileName' generated and downloaded!"
                                                     }
                                                 }
                                                 New-UDGrid -Item -ExtraSmallSize 12 -SmallSize 6 -Content {
-                                                    New-UDButton -Text "Start New Lab" -Color secondary -FullWidth -OnClick {
+                                                    New-UDButton -Text "Start New Definition" -Color secondary -OnClick {
                                                         $Session:Networks = [System.Collections.Generic.List[PSCustomObject]]::new()
                                                         $Session:VMs = @()
                                                         $Session:CurrentVMNICs = @()
@@ -659,4 +678,13 @@ $DefinitionPage = New-UDPage -Url '/New-Definition' -Name 'New Definition' -Cont
 
     }
 
+    # Footer
+    New-UDElement -Tag div -Attributes @{ style = @{ 'position' = 'fixed'; 'bottom' = '0'; 'left' = '0'; 'right' = '0'; 'z-index' = '1000' } } -Content {
+        New-UDTypography -Text "AutomatedLab UI v1.1.0" -Variant caption -Align center -Style @{
+            'padding'          = '8px 16px'
+            'opacity'          = '0.7'
+            'background-color' = 'rgba(0,0,0,0.05)'
+            'border-top'       = '1px solid rgba(0,0,0,0.12)'
+        }
+    }
 }

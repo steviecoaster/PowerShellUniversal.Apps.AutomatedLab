@@ -271,7 +271,7 @@ $ManageLabsPage = New-UDPage -Url "/Manage-Labs" -Name "Manage Labs" -Content {
                                 New-UDStack -Direction column -AlignItems center -Spacing 2 -Content {
                                     New-UDIcon -Icon times-circle -Size lg -Color error
                                     New-UDTypography -Text "Error loading VM information" -Variant body2 -Style @{ 'color' = '#d32f2f'; 'text-align' = 'center' }
-                                    New-UDTypography -Text $_.Exception.Message -Variant caption -Style @{ 'opacity' = '0.7'; 'text-align' = 'center'; 'max-width' = '400px'; 'word-wrap' = 'break-word' }
+                                    New-UDTypography -Text "It looks like this lab hasn't been built yet. Press 'Start' in the Actions menu to build the lab and see metadata." -Variant caption -Style @{ 'opacity' = '0.7'; 'text-align' = 'center'; 'max-width' = '400px'; 'word-wrap' = 'break-word' }
                                 }
                             } -Style @{ 'padding' = '20px'; 'text-align' = 'center' }
                         }
@@ -309,7 +309,7 @@ $ManageLabsPage = New-UDPage -Url "/Manage-Labs" -Name "Manage Labs" -Content {
 
     # Footer
     New-UDElement -Tag div -Attributes @{ style = @{ 'position' = 'fixed'; 'bottom' = '0'; 'left' = '0'; 'right' = '0'; 'z-index' = '1000' } } -Content {
-        New-UDTypography -Text "AutomatedLab UI v1.0.0" -Variant caption -Align center -Style @{
+        New-UDTypography -Text "AutomatedLab UI v1.1.0" -Variant caption -Align center -Style @{
             'padding'          = '8px 16px'
             'opacity'          = '0.7'
             'background-color' = 'rgba(0,0,0,0.05)'

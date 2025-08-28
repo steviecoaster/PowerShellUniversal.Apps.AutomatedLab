@@ -1,4 +1,4 @@
-function New-UDAutomatedLabApp {
+﻿function New-UDAutomatedLabApp {
     <#
     .SYNOPSIS
     Creates a new AutomatedLab management app.
@@ -290,36 +290,58 @@ New-LabDefinition -Name '$($LabData.LabName)' -DefaultVirtualizationEngine Hyper
 
         $script += "`n"
 
-    # Add VMs
-    foreach ($vm in $LabData.VMs) {
-        $script += "Add-LabMachineDefinition -Name '$($vm.Name)' -OperatingSystem '$($vm.OS)' -Memory $($vm.RAM)GB -Processors $($vm.CPU)"
+        # Add VMs
+        foreach ($vm in $LabData.VMs) {
+            $script += "Add-LabMachineDefinition -Name '$($vm.Name)' -OperatingSystem '$($vm.OS)' -Memory $($vm.RAM)GB -Processors $($vm.CPU)"
         
-        if ($vm.NetworkAdapters -and $vm.NetworkAdapters.Count -gt 0) {
-            $adapters = $vm.NetworkAdapters | ForEach-Object {
-                $adapterDef = "New-LabNetworkAdapterDefinition -VirtualSwitch '$($_.VirtualSwitch)'"
-                if ($_.InterfaceName) {
-                    $adapterDef += " -InterfaceName '$($_.InterfaceName)'"
+            if ($vm.NetworkAdapters -and $vm.NetworkAdapters.Count -gt 0) {
+                $adapters = $vm.NetworkAdapters | ForEach-Object {
+                    $adapterDef = "New-LabNetworkAdapterDefinition -VirtualSwitch '$($_.VirtualSwitch)'"
+                    if ($_.InterfaceName) {
+                        $adapterDef += " -InterfaceName '$($_.InterfaceName)'"
+                    }
+                    if ($_.IpAddress -and ![string]::IsNullOrEmpty($_.IpAddress)) {
+                        $adapterDef += " -IpAddress '$($_.IpAddress)'"
+                    }
+                    if ($_.UseDhcp -eq $false -and $_.IpAddress) {
+                        # Static IP configuration - don't add UseDhcp parameter as it defaults to false when IpAddress is specified
+                    }
+                    else {
+                        # DHCP configuration
+                        $adapterDef += " -UseDhcp"
+                    }
+                    $adapterDef
                 }
-                if ($_.IpAddress -and ![string]::IsNullOrEmpty($_.IpAddress)) {
-                    $adapterDef += " -IpAddress '$($_.IpAddress)'"
-                }
-                if ($_.UseDhcp -eq $false -and $_.IpAddress) {
-                    # Static IP configuration - don't add UseDhcp parameter as it defaults to false when IpAddress is specified
-                } else {
-                    # DHCP configuration
-                    $adapterDef += " -UseDhcp"
-                }
-                $adapterDef
+                $script += " -NetworkAdapter @($($adapters -join ', '))"
             }
-            $script += " -NetworkAdapter @($($adapters -join ', '))"
-        }
-        $script += "`n"
-    }        $script += @"
+            $script += "`n"
+        }        $script += @"
 
 Install-Lab
 
 "@
 
         return $script
+    }
+}
+
+function New-AutomatedLabISO {
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory)]
+        [String]
+        $ISOFile
+    )
+
+    end {
+        $LabSources = Get-LabSourcesLocation -Local
+        $ISOFolder = Join-Path $LabSources -ChildPath 'ISOs'
+        try {
+            Copy-Item $ISOFile -Destination $ISOFolder -ErrorAction Stop
+            Show-UDToast -Message "$ISOFile added to $ISOFolder successfully!"
+        }
+        catch {
+            Show-UDToast -Message "$ISOFile upload failed!"
+        }   
     }
 }

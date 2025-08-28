@@ -26,25 +26,19 @@
                     Show-UDModal -Content {
                         New-UDCard -Content {
                             New-UDTypography -Variant h6 -Text "ISO File Upload" -Style @{ 'margin-bottom' = '16px'; 'text-align' = 'center' }
-                            
-                            New-UDUpload -Id ISOUpload -Text "Select ISO File" -OnUpload {
-                                $Data = $Body | ConvertFrom-Json
-                                $FileName = $Data.Name
-                                $FilePath = $Data.FullName
-                            
-                                try {
-                                    # Add your ISO registration logic here
-                                    # Add-LabISOImage -Path $FilePath
-                                
-                                    Show-UDToast -Message "ISO file '$FileName' uploaded and added successfully!" -MessageColor success
-                                    Hide-UDModal
-                                
-                                    # Refresh the ISO table
-                                    Sync-UDElement -Id ISOTable
+                            New-UDForm -Content {
+                                New-UDTextbox -Id 'ISOUploadFile' -Label ISO -Placeholder 'Enter path to ISO' -OnValidate {
+                                    if(Test-Path $EventData.Replace('"','')) {
+                                        New-UDValidationResult -Valid
+                                    }
+                                    else {
+                                        New-UDValidationResult -ValidationError 'ISO file does not exist. Please correct the path and try again.'
+                                    }
                                 }
-                                catch {
-                                    Show-UDToast -Message "Failed to add ISO: $($_.Exception.Message)" -MessageColor error
-                                }
+                            }  -OnSubmit {
+                                New-AutomatedLabISO -ISOFile $($EventData.ISOUploadFile -replace '"','')
+                                Sync-UDElement -Id ISOTable
+                                Hide-UDModal
                             }
                             
                             New-UDTypography -Variant caption -Text "Supported formats: .iso files only" -Style @{ 'opacity' = '0.7'; 'margin-top' = '16px'; 'text-align' = 'center' }
@@ -69,126 +63,137 @@
                     $isos = Get-LabAvailableOperatingSystem -ErrorAction SilentlyContinue
                 
                     if ($isos -and $isos.Count -gt 0) {
+                        # Group ISOs by OS Family
+                        $groupedIsos = $isos | Group-Object { 
+                            # Extract OS Family from OperatingSystemName
+                            $osName = $_.OperatingSystemName
+                            switch -Regex ($osName) {
+                                'Windows 10' { 'Windows 10' }
+                                'Windows 11' { 'Windows 11' }
+                                'Windows Server 2025' { 'Windows Server 2025' }
+                                'Windows Server 2022' { 'Windows Server 2022' }
+                                'Windows Server 2019' { 'Windows Server 2019' }
+                                'Windows Server 2016' { 'Windows Server 2016' }
+                                'Windows Server 2012' { 'Windows Server 2012' }
+                                'Windows 8' { 'Windows 8' }
+                                'Windows 7' { 'Windows 7' }
+                                'Ubuntu' { 'Ubuntu' }
+                                'CentOS' { 'CentOS' }
+                                'RHEL|Red Hat' { 'Red Hat Enterprise Linux' }
+                                default { 'Other' }
+                            }
+                        }
+
+                        # Define columns for the expandable table
                         $Columns = @(
-                            New-UDTableColumn -Property OperatingSystemName -Title "Operating System" -Render {
+                            New-UDTableColumn -Property Name -Title "OS Family" -Render {
                                 New-UDStack -Direction row -Spacing 1 -AlignItems center -Content {
-                                    New-UDIcon -Icon compact-disc -Size sm -Color primary
-                                    New-UDTypography -Text $EventData.OperatingSystemName -Variant body1 -Style @{ 'font-weight' = '500' }
+                                    New-UDIcon -Icon windows -Size sm -Color primary
+                                    New-UDTypography -Text $EventData.Name -Variant body1 -Style @{ 'font-weight' = '600' }
                                 }
                             }
-                            New-UDTableColumn -Property Version -Title "Version" -Render {
-                                if ($EventData.Version) {
-                                    New-UDChip -Label $EventData.Version -Color default -Variant outlined
+                            New-UDTableColumn -Property Count -Title "Available Editions" -Render {
+                                $count = if ($null -eq $EventData.Count) { 0 } else { $EventData.Count }
+                                New-UDChip -Label "$count Editions" -Color success -Variant outlined
+                            }
+                            New-UDTableColumn -Property IsoPath -Title "ISO Path" -Render {
+                                New-UDTypography -Text $EventData.Group[0].IsoPath -Variant caption -Style @{ 'word-break' = 'break-all'; 'font-family' = 'monospace' }
+                            }
+                            New-UDTableColumn -Property TotalSize -Title "Total Size" -Render {
+                                if (Test-Path $EventData.Group[0].IsoPath) {
+                                    $sizeGB = [math]::Round((Get-Item $EventData.Group[0].IsoPath -ErrorAction SilentlyContinue).Length / 1GB, 2)
+                                    New-UDTypography -Text "$sizeGB GB" -Variant body2
                                 }
                                 else {
                                     New-UDTypography -Text "N/A" -Variant body2 -Style @{ 'opacity' = '0.6' }
                                 }
                             }
-                            New-UDTableColumn -Property IsoPath -Title "ISO Path" -Render {
-                                New-UDTypography -Text $EventData.IsoPath -Variant caption -Style @{ 'word-break' = 'break-all'; 'font-family' = 'monospace' }
-                            }
-                            New-UDTableColumn -Property Size -Title "Size" -Render {
-                                if (Test-Path $EventData.IsoPath) {
-                                    $SizeGB = [math]::Round((Get-Item $EventData.IsoPath).Length / 1GB, 2)
-                                    New-UDTypography -Text "$SizeGB GB" -Variant body2
-                                }
-                                else {
-                                    New-UDChip -Label "Missing" -Color error -Variant filled -Size small
-                                }
-                            }
                             New-UDTableColumn -Property Actions -Title "Actions" -Render {
                                 New-UDStack -Direction row -Spacing 1 -Content {
-                                    New-UDButton -Text "Details" -Color primary -Size small -Variant outlined -OnClick {
-                                        $ISODetails = $EventData
+                                    New-UDButton -Text "Remove ISO" -Color error -Size small -Variant outlined -OnClick {
                                         Show-UDModal -Content {
-                                            New-UDCard -Content {
-                                                New-UDTypography -Variant h5 -Text "ISO Details" -Style @{ 'margin-bottom' = '20px'; 'color' = '#9C27B0'; 'text-align' = 'center' }
-                                            
-                                                # Basic Information
-                                                New-UDCard -Content {
-                                                    New-UDTypography -Variant h6 -Text "Basic Information" -Style @{ 'margin-bottom' = '12px' }
-                                                    New-UDRow -Columns {
-                                                        New-UDColumn -SmallSize 6 -Content {
-                                                            New-UDTypography -Text "Name:" -Variant subtitle2 -Style @{ 'font-weight' = 'bold' }
-                                                            New-UDTypography -Text $ISODetails.OperatingSystemName -Variant body1
-                                                        }
-                                                        New-UDColumn -SmallSize 6 -Content {
-                                                            New-UDTypography -Text "Version:" -Variant subtitle2 -Style @{ 'font-weight' = 'bold' }
-                                                            New-UDTypography -Text ($ISODetails.Version -or "N/A") -Variant body1
-                                                        }
-                                                    }
-                                                    New-UDRow -Columns {
-                                                        New-UDColumn -SmallSize 12 -Content {
-                                                            New-UDTypography -Text "ISO Path:" -Variant subtitle2 -Style @{ 'font-weight' = 'bold'; 'margin-top' = '8px' }
-                                                            New-UDTypography -Text $ISODetails.IsoPath -Variant body2 -Style @{ 'font-family' = 'monospace'; 'word-break' = 'break-all' }
-                                                        }
-                                                    }
-                                                } -Style @{ 'background-color' = 'rgba(156, 39, 176, 0.04)'; 'padding' = '12px'; 'margin-bottom' = '16px' }
-                                            
-                                                # File Information
-                                                if (Test-Path $ISODetails.IsoPath) {
-                                                    $FileInfo = Get-Item $ISODetails.IsoPath
-                                                    New-UDCard -Content {
-                                                        New-UDTypography -Variant h6 -Text "File Information" -Style @{ 'margin-bottom' = '12px' }
-                                                        New-UDRow -Columns {
-                                                            New-UDColumn -SmallSize 6 -Content {
-                                                                New-UDTypography -Text "Size:" -Variant subtitle2 -Style @{ 'font-weight' = 'bold' }
-                                                                New-UDTypography -Text "$([math]::Round($FileInfo.Length / 1GB, 2)) GB" -Variant body1
-                                                            }
-                                                            New-UDColumn -SmallSize 6 -Content {
-                                                                New-UDTypography -Text "Created:" -Variant subtitle2 -Style @{ 'font-weight' = 'bold' }
-                                                                New-UDTypography -Text $FileInfo.CreationTime.ToString("yyyy-MM-dd HH:mm") -Variant body1
-                                                            }
-                                                        }
-                                                    } -Style @{ 'background-color' = 'rgba(76, 175, 80, 0.04)'; 'padding' = '12px' }
-                                                }
-                                                else {
-                                                    New-UDCard -Content {
-                                                        New-UDTypography -Variant h6 -Text "File Status" -Style @{ 'margin-bottom' = '8px'; 'color' = '#f44336' }
-                                                        New-UDTypography -Text "ISO file not found at the specified path." -Variant body2 -Style @{ 'color' = '#f44336' }
-                                                    } -Style @{ 'background-color' = 'rgba(244, 67, 54, 0.04)'; 'padding' = '12px' }
-                                                }
-                                            } -Style @{ 'max-width' = '600px'; 'margin' = 'auto' }
-                                        } -Header {
-                                            New-UDTypography -Text "ISO: $($ISODetails.OperatingSystemName)" -Variant h6
-                                        } -Footer {
-                                            New-UDButton -Text "Close" -Color primary -OnClick {
-                                                Hide-UDModal
+                                            New-UDTypography -Text "Are you sure you want to remove ALL ISOs from this family?" -Variant h6 -Align center
+                                            New-UDTypography -Text $EventData.Name -Variant body1 -Align center -Style @{ 'margin' = '16px 0'; 'font-weight' = 'bold' }
+                                            New-UDTypography -Text "This will remove the following Operating Systems:" -Variant body2 -Align center -Style @{ 'margin-bottom' = '8px' }
+                                            foreach ($iso in $EventData.Group) {
+                                                New-UDTypography -Text "• $($iso.OperatingSystemName)" -Variant body2 -Align center -Style @{ 'font-family' = 'monospace'; 'margin' = '4px 0' }
                                             }
-                                        } -FullWidth -MaxWidth 'md'
-                                    } -Icon (New-UDIcon -Icon info-circle)
-                                
-                                    New-UDButton -Text "Remove" -Color error -Size small -Variant outlined -OnClick {
-                                        Show-UDModal -Content {
-                                            New-UDTypography -Text "Are you sure you want to remove this ISO?" -Variant h6 -Align center
-                                            New-UDTypography -Text $EventData.OperatingSystemName -Variant body1 -Align center -Style @{ 'margin' = '16px 0'; 'font-weight' = 'bold' }
-                                            New-UDTypography -Text "This action cannot be undone." -Variant body2 -Align center -Style @{ 'color' = '#f44336' }
+                                            New-UDTypography -Text "This action cannot be undone." -Variant body2 -Align center -Style @{ 'color' = '#f44336'; 'margin-top' = '16px' }
                                         } -Header {
-                                            New-UDTypography -Text "Confirm Removal" -Variant h6
+                                            New-UDTypography -Text "Confirm Family Removal" -Variant h6
                                         } -Footer {
                                             New-UDButton -Text "Cancel" -OnClick { Hide-UDModal }
-                                            New-UDButton -Text "Remove ISO" -Color error -OnClick {
+                                            New-UDButton -Text "Remove All ISOs" -Color error -OnClick {
                                                 try {
-                                                    # Add your ISO removal logic here
-                                                    # Remove-LabISOImage -Name $EventData.OperatingSystemName
-                                                
-                                                    Show-UDToast -Message "ISO '$($EventData.OperatingSystemName)' removed successfully!" -MessageColor success
+                                                    Remove-Item $EventData.Group[0].IsoPath -Force
+                                                    Show-UDToast -Message "Removed ISO(s) for family '$($EventData.Name)' successfully!"
                                                     Hide-UDModal
                                                     Sync-UDElement -Id ISOTable
                                                 }
                                                 catch {
-                                                    Show-UDToast -Message "Failed to remove ISO: $($_.Exception.Message)" -MessageColor error
+                                                    Show-UDToast -Message "Failed to remove ISOs: $($_.Exception.Message)"
                                                 }
                                             }
-                                        } -MaxWidth 'sm'
+                                        } -MaxWidth 'md'
                                     } -Icon (New-UDIcon -Icon trash)
                                 }
                             }
                         )
-                    
+
                         New-UDCard -Content {
-                            New-UDTypography -Variant h6 -Text "Available Operating Systems" -Style @{ 'margin-bottom' = '16px' }
-                            New-UDTable -Data $isos -Columns $Columns -Dense -ShowSearch -ShowPagination -PageSize 10 -Sort
+                            New-UDTypography -Variant h6 -Text "Available Operating Systems by Family" -Style @{ 'margin-bottom' = '16px' }
+                            New-UDTable -Data $groupedIsos -Columns $Columns -Dense -ShowSearch -ShowPagination -PageSize 10 -Sort -OnRowExpand {
+                                try {
+                                    $familyName = $EventData.Name
+                                    $familyIsos = $EventData.Group
+                                    
+                                    if ([string]::IsNullOrEmpty($familyName) -or !$familyIsos) {
+                                        New-UDCard -Content {
+                                            New-UDStack -Direction column -AlignItems center -Spacing 2 -Content {
+                                                New-UDIcon -Icon exclamation-triangle -Size lg -Color warning
+                                                New-UDTypography -Text "No ISOs found for this family" -Variant body2 -Style @{ 'opacity' = '0.7'; 'text-align' = 'center' }
+                                            }
+                                        } -Style @{ 'padding' = '20px'; 'text-align' = 'center' }
+                                        return
+                                    }
+                                    
+                                    # Return the expanded table for individual ISOs in this family
+                                    New-UDTable -Data $familyIsos -Columns @(
+                                        New-UDTableColumn -Property OperatingSystemName -Title "Operating System" -Render {
+                                            New-UDStack -Direction row -Spacing 1 -AlignItems center -Content {
+                                                New-UDIcon -Icon compact-disc -Size sm -Color primary
+                                                New-UDTypography -Text $EventData.OperatingSystemName -Variant body1 -Style @{ 'font-weight' = '500' }
+                                            }
+                                        }
+                                        New-UDTableColumn -Property Version -Title "Version" -Render {
+                                            if ($EventData.Version) {
+                                                New-UDChip -Label $EventData.Version -Color default -Variant outlined
+                                            }
+                                            else {
+                                                New-UDTypography -Text "N/A" -Variant body2 -Style @{ 'opacity' = '0.6' }
+                                            }
+                                        }
+                                        New-UDTableColumn -Property Size -Title "Size" -Render {
+                                            if (Test-Path $EventData.IsoPath) {
+                                                $SizeGB = [math]::Round((Get-Item $EventData.IsoPath).Length / 1GB, 2)
+                                                New-UDTypography -Text "$SizeGB GB" -Variant body2
+                                            }
+                                            else {
+                                                New-UDChip -Label "Missing" -Color error -Variant filled -Size small
+                                            }
+                                        }
+                                    ) -Dense
+                                }
+                                catch {
+                                    New-UDCard -Content {
+                                        New-UDStack -Direction column -AlignItems center -Spacing 2 -Content {
+                                            New-UDIcon -Icon exclamation-triangle -Size lg -Color error
+                                            New-UDTypography -Text "Error loading ISOs for this family" -Variant body2 -Style @{ 'opacity' = '0.7'; 'text-align' = 'center' }
+                                            New-UDTypography -Text $_.Exception.Message -Variant caption -Style @{ 'opacity' = '0.5'; 'text-align' = 'center' }
+                                        }
+                                    } -Style @{ 'padding' = '20px'; 'text-align' = 'center' }
+                                }
+                            }
                         } -Style @{ 'box-shadow' = '0 4px 6px rgba(0, 0, 0, 0.1)' }
                     }
                     else {
@@ -222,7 +227,7 @@
 
     # Footer
     New-UDElement -Tag div -Attributes @{ style = @{ 'position' = 'fixed'; 'bottom' = '0'; 'left' = '0'; 'right' = '0'; 'z-index' = '1000' } } -Content {
-        New-UDTypography -Text "AutomatedLab UI v1.0.0" -Variant caption -Align center -Style @{
+        New-UDTypography -Text "AutomatedLab UI v1.1.0" -Variant caption -Align center -Style @{
             'padding'          = '8px 16px'
             'opacity'          = '0.7'
             'background-color' = 'rgba(0,0,0,0.05)'
