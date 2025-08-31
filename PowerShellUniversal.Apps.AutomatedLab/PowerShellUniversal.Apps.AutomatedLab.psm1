@@ -345,3 +345,55 @@ function New-AutomatedLabISO {
         }   
     }
 }
+
+function Start-PSULab {
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory)]
+        [String]
+        $LabName
+    )
+
+    end {
+        Start-Lab -Name $LabName -ErrorAction SilentlyContinue
+    }
+}
+
+function Start-SingleVM {
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory)]
+        [String]
+        $LabVM
+    )
+
+    end {
+        Start-LWHypervVM -ComputerName $LabVM -TimeoutInMinutes 5
+    }
+}
+
+function Stop-PSULab {
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory)]
+        [String]
+        $LabName
+    )
+
+    end {
+        Stop-Lab -Name $LabName -ErrorAction SilentlyContinue
+    }
+}
+
+function Stop-SingleVM {
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory)]
+        [String]
+        $LabVM
+    )
+
+    end {
+        Stop-LWHypervVM -ComputerName $LabVM -TimeoutInMinutes 5
+    }
+}

@@ -4,5 +4,5 @@
     $NewLabPage
     $ManageISOsPage
     $CustomRolesPage
-    $DefinitionPage
+    $WizardPage
 ) -NavigationLayout Permanent

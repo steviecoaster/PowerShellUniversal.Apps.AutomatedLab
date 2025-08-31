@@ -12,7 +12,7 @@
     RootModule        = 'PowerShellUniversal.Apps.AutomatedLab.psm1'
 
     # Version number of this module.
-    ModuleVersion     = '1.0.0'
+    ModuleVersion     = '1.1.1'
 
     # Supported PSEditions
     # CompatiblePSEditions = @()
@@ -75,7 +75,11 @@
     'Split-Configuration', 
     'Get-LabInfo', 
     'New-AutomatedLabDefinitionScript', 
-    'New-AutomatedLabISO'
+    'New-AutomatedLabISO',
+    'Stop-PSULab',
+    'Start-PSULab',
+    'Start-SingleVM',
+    'Stop-SingleVM'
 
     # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
     CmdletsToExport   = '*'
@@ -95,15 +99,15 @@
     # List of all files packaged with this module
     FileList          = 'PowerShellUniversal.Apps.AutomatedLab.psm1', 
     'PowerShellUniversal.Apps.AutomatedLab.psd1', 
-    '.universal\dashboards.ps1', '.universal\scripts.ps1', 
-    'dashboards\AutomatedLab\AutomatedLab.ps1', 
+    '.universal\dashboards.ps1', 
+    '.universal\scripts.ps1', 
+    'dashboards\AutomatedLab\AutomatedLab.ps1',
+    'dashboards\AutomatedLab\pages\Create Wizard.ps1',
     'dashboards\AutomatedLab\pages\Custom Roles.ps1', 
     'dashboards\AutomatedLab\pages\Home.ps1', 
     'dashboards\AutomatedLab\pages\Manage ISOs.ps1', 
     'dashboards\AutomatedLab\pages\Manage Labs.ps1', 
-    'dashboards\AutomatedLab\pages\New Definition.ps1', 
-    'dashboards\AutomatedLab\pages\New Lab.ps1', 
-    'dashboards\AutomatedLab\pages\Testing.ps1'
+    'dashboards\AutomatedLab\pages\New Configuration.ps1'
 
     # Private data to pass to the module specified in RootModule/ModuleToProcess. This may also contain a PSData hashtable with additional module metadata used by PowerShell.
     PrivateData       = @{
