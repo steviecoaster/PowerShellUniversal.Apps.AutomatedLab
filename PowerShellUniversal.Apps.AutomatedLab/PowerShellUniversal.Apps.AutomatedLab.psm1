@@ -8,7 +8,6 @@
     #>
 
     # Load all page scripts
-    Write-Output $PSScriptRoot
     $DashboardPath = Join-Path $PSScriptRoot -ChildPath 'dashboards\AutomatedLab'
     Get-ChildItem (Join-Path $DashboardPath -ChildPath 'pages') -Recurse -Filter *.ps1 | Foreach-Object {
         . $_.FullName
@@ -397,3 +396,6 @@ function Stop-SingleVM {
         Stop-LWHypervVM -ComputerName $LabVM -TimeoutInMinutes 5
     }
 }
+
+
+New-PSUScript -Module 'PowerShellUniversal.Apps.AutomatedLab' -Command 'Start-Lab' -Environment 'PowerShell 7'

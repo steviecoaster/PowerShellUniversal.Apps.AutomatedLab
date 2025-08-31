@@ -1,4 +1,4 @@
-﻿New-PSUScript -Name 'Start Lab' -Description 'Starts a Lab in AutomatedLab' -Module 'PowerShellUniversal.Apps.AutomatedLab' -Command 'Start-PSULab' -Environment 'PowerShell 7' 
-New-PSUScript -Name 'Start VM' -Description 'Starts only the selected VM within a lab' -Module 'PowerShellUniversal.Apps.AutomatedLab' -Command 'Start-SingleVM' -Environment 'PowerShell 7' 
-New-PSUScript -Name 'Stop Lab' -Description 'Stops a lab in Automated Lab' -Module 'PowerShellUniversal.Apps.AutomatedLab' -Command 'Stop-PSULab' -Environment 'PowerShell 7' 
-New-PSUScript -Name 'Stop VM' -Description 'Stops only the selected VM within a lab' -Module 'PowerShellUniversal.Apps.AutomatedLab' -Command 'Stop-SingleVM' -Environment 'PowerShell 7'
+﻿New-PSUScript -Description 'Starts a Lab in AutomatedLab' -Module 'PowerShellUniversal.Apps.AutomatedLab' -Command 'Start-PSULab' -Environment 'PowerShell 7' 
+New-PSUScript -Description 'Starts only the selected VM within a lab' -Module 'PowerShellUniversal.Apps.AutomatedLab' -Command 'Start-SingleVM' -Environment 'PowerShell 7' 
+New-PSUScript -Description 'Stops a lab in Automated Lab' -Module 'PowerShellUniversal.Apps.AutomatedLab' -Command 'Stop-PSULab' -Environment 'PowerShell 7' 
+New-PSUScript -Description 'Stops only the selected VM within a lab' -Module 'PowerShellUniversal.Apps.AutomatedLab' -Command 'Stop-SingleVM' -Environment 'PowerShell 7'
