@@ -320,7 +320,7 @@ $ManageLabsPage = New-UDPage -Url "/Manage-Labs" -Name "Manage Labs" -Content {
 
     # Footer
     New-UDElement -Tag div -Attributes @{ style = @{ 'position' = 'fixed'; 'bottom' = '0'; 'left' = '0'; 'right' = '0'; 'z-index' = '1000' } } -Content {
-        New-UDTypography -Text "AutomatedLab UI v1.1.0" -Variant caption -Align center -Style @{
+        New-UDTypography -Text "AutomatedLab UI v1.1.1" -Variant caption -Align center -Style @{
             'padding'          = '8px 16px'
             'opacity'          = '0.7'
             'background-color' = 'rgba(0,0,0,0.05)'
