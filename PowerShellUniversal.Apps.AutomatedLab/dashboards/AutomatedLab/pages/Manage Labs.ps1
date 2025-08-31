@@ -74,8 +74,79 @@ $ManageLabsPage = New-UDPage -Url "/Manage-Labs" -Name "Manage Labs" -Content {
                                     }
                                 
                                     if (![string]::IsNullOrEmpty($labName)) {
-                                        $psuscript = Get-PSUScript -Name 'Start Lab' -AppToken $Secret:AU_Token -TrustCertificate
-                                        Invoke-PSUScript -Script $psuscript -Parameters @{LabName = $labName } -AppToken $Secret:AU_Token -TrustCertificate
+                                        try {
+                                            $psuscript = Get-PSUScript -Name 'PowerShellUniversal.Apps.AutomatedLab\Start-PSULab' -TrustCertificate
+                                            
+                                            # Start the job and monitor it in a modal
+                                            $Job = Invoke-PSUScript -Script $psuscript -Parameters @{LabName = $labName } -TrustCertificate
+                                            
+                                            # Show modal with job monitoring
+                                            Show-UDModal -Content {
+                                                New-UDElement -Id 'ModalJobOutput' -Tag 'pre' -Attributes @{
+                                                    style = @{
+                                                        'background-color' = '#1e1e1e'
+                                                        'color' = '#00ff00'
+                                                        'border-radius' = '4px'
+                                                        'padding' = '16px'
+                                                        'max-height' = '500px'
+                                                        'overflow-y' = 'auto'
+                                                        'font-family' = 'Consolas, Monaco, monospace'
+                                                        'font-size' = '12px'
+                                                        'white-space' = 'pre-wrap'
+                                                        'min-height' = '300px'
+                                                        'width' = '100%'
+                                                    }
+                                                } -Content {
+                                                    "Starting lab: $labName...`r`n"
+                                                }
+                                            } -Header {
+                                                New-UDTypography -Text "Lab Start Progress" -Variant h5
+                                            } -FullWidth -MaxWidth 'lg' -Persistent
+                                            
+                                            # Monitor job in background
+                                            while($Job.Status -eq 'Running' -or $Job.Status -eq 'Queued') {
+                                                try {
+                                                    [array]$Output = Get-PSUJobOutput -Job $Job -TrustCertificate -ErrorAction SilentlyContinue
+                                                    
+                                                    Set-UDElement -Id 'ModalJobOutput' -Content {
+                                                        if ($Output -and $Output.Length -gt 0) {
+                                                            ($Output | ForEach-Object { "$_`r`n" }) -join ""
+                                                        } else {
+                                                            "Waiting for job output..."
+                                                        }
+                                                    }
+                                                } catch {
+                                                    Write-Host "Error getting job output: $($_.Exception.Message)"
+                                                }
+                                                
+                                                $Job = Get-PSUJob -Id $Job.Id -TrustCertificate -ErrorAction SilentlyContinue
+                                                Start-Sleep -Seconds 2
+                                            }
+                                            
+                                            # Get final output and close modal
+                                            try {
+                                                [array]$FinalOutput = Get-PSUJobOutput -Job $Job -TrustCertificate -ErrorAction SilentlyContinue
+                                                Set-UDElement -Id 'ModalJobOutput' -Content {
+                                                    if ($FinalOutput -and $FinalOutput.Length -gt 0) {
+                                                        $finalText = ($FinalOutput | ForEach-Object { "$_`r`n" }) -join ""
+                                                        "$finalText`r`n`r`n--- Job $($Job.Status) ---"
+                                                    } else {
+                                                        "Job completed but no output was captured.`r`n`r`n--- Job $($Job.Status) ---"
+                                                    }
+                                                }
+                                            } catch {
+                                                Set-UDElement -Id 'ModalJobOutput' -Content {
+                                                    "Error retrieving final job output: $($_.Exception.Message)`r`n`r`n--- Job $($Job.Status) ---"
+                                                }
+                                            }
+                                            
+                                            Start-Sleep -Seconds 3
+                                            Hide-UDModal
+                                            Sync-UDElement -Id "LabsContent"
+                                        }
+                                        catch {
+                                            Show-UDToast -Message "Error starting lab: $($_.Exception.Message)" -Duration 7000
+                                        }
                                     }
                                     else {
                                         Show-UDToast -Message "Unable to determine lab name"
@@ -101,8 +172,79 @@ $ManageLabsPage = New-UDPage -Url "/Manage-Labs" -Name "Manage Labs" -Content {
                                     }
                                 
                                     if (![string]::IsNullOrEmpty($labName)) {
-                                        $psuscript = Get-PSUScript -Name 'Stop Lab' -AppToken $Secret:AU_Token -TrustCertificate
-                                        Invoke-PSUScript -Script $psuscript -Parameters @{LabName = $labName } -AppToken $Secret:AU_Token -TrustCertificate
+                                        try {
+                                            $psuscript = Get-PSUScript -Name 'PowerShellUniversal.Apps.AutomatedLab\Stop-PSULab' -TrustCertificate
+                                            
+                                            # Start the job and monitor it in a modal
+                                            $Job = Invoke-PSUScript -Script $psuscript -Parameters @{LabName = $labName } -TrustCertificate
+                                            
+                                            # Show modal with job monitoring
+                                            Show-UDModal -Content {
+                                                New-UDElement -Id 'ModalJobOutput' -Tag 'pre' -Attributes @{
+                                                    style = @{
+                                                        'background-color' = '#1e1e1e'
+                                                        'color' = '#ffffff'
+                                                        'border-radius' = '4px'
+                                                        'padding' = '16px'
+                                                        'max-height' = '500px'
+                                                        'overflow-y' = 'auto'
+                                                        'font-family' = 'Consolas, Monaco, monospace'
+                                                        'font-size' = '12px'
+                                                        'white-space' = 'pre-wrap'
+                                                        'min-height' = '300px'
+                                                        'width' = '100%'
+                                                    }
+                                                } -Content {
+                                                    "Stopping lab: $labName...`r`n"
+                                                }
+                                            } -Header {
+                                                New-UDTypography -Text "Lab Stop Progress" -Variant h5
+                                            } -FullWidth -MaxWidth 'lg' -Persistent
+                                            
+                                            # Monitor job in background
+                                            while($Job.Status -eq 'Running' -or $Job.Status -eq 'Queued') {
+                                                try {
+                                                    [array]$Output = Get-PSUJobOutput -Job $Job -TrustCertificate -ErrorAction SilentlyContinue
+                                                    
+                                                    Set-UDElement -Id 'ModalJobOutput' -Content {
+                                                        if ($Output -and $Output.Length -gt 0) {
+                                                            ($Output | ForEach-Object { "$_`r`n" }) -join ""
+                                                        } else {
+                                                            "Waiting for job output..."
+                                                        }
+                                                    }
+                                                } catch {
+                                                    Write-Host "Error getting job output: $($_.Exception.Message)"
+                                                }
+                                                
+                                                $Job = Get-PSUJob -Id $Job.Id -TrustCertificate -ErrorAction SilentlyContinue
+                                                Start-Sleep -Seconds 2
+                                            }
+                                            
+                                            # Get final output and close modal
+                                            try {
+                                                [array]$FinalOutput = Get-PSUJobOutput -Job $Job -TrustCertificate -ErrorAction SilentlyContinue
+                                                Set-UDElement -Id 'ModalJobOutput' -Content {
+                                                    if ($FinalOutput -and $FinalOutput.Length -gt 0) {
+                                                        $finalText = ($FinalOutput | ForEach-Object { "$_`r`n" }) -join ""
+                                                        "$finalText`r`n`r`n--- Job $($Job.Status) ---"
+                                                    } else {
+                                                        "Job completed but no output was captured.`r`n`r`n--- Job $($Job.Status) ---"
+                                                    }
+                                                }
+                                            } catch {
+                                                Set-UDElement -Id 'ModalJobOutput' -Content {
+                                                    "Error retrieving final job output: $($_.Exception.Message)`r`n`r`n--- Job $($Job.Status) ---"
+                                                }
+                                            }
+                                            
+                                            Start-Sleep -Seconds 3
+                                            Hide-UDModal
+                                            Sync-UDElement -Id "LabsContent"
+                                        }
+                                        catch {
+                                            Show-UDToast -Message "Error stopping lab: $($_.Exception.Message)" -Duration 7000
+                                        }
                                     }
                                     else {
                                         Show-UDToast -Message "Unable to determine lab name"
@@ -228,19 +370,19 @@ $ManageLabsPage = New-UDPage -Url "/Manage-Labs" -Name "Manage Labs" -Content {
                                             New-UDChip -Label "$($EventData.MemoryGB) GB" -Color info -Variant outlined -Icon (New-UDIcon -Icon memory)
                                         }
                                         New-UDTableColumn -Property Status -Title 'Status' -Render {
-                                            $statusColor = switch ($EventData.Status) {
-                                                'Running' { 'success' }
-                                                'Stopped' { 'error' }
-                                                'Starting' { 'warning' }
-                                                'Stopping' { 'warning' }
-                                                default { 'default' }
+                                            $statusColor = switch -Regex ($EventData.Status) {
+                                                '^Running$|^Started$|^On$' { 'success' }
+                                                '^Stopped$|^Off$|^Shutdown$' { 'error' }
+                                                '^Starting$|^Booting$' { 'warning' }
+                                                '^Stopping$|^Shutting' { 'warning' }
+                                                default { 'info' }
                                             }
-                                            $statusIcon = switch ($EventData.Status) {
-                                                'Running' { 'play-circle' }
-                                                'Stopped' { 'stop-circle' }
-                                                'Starting' { 'clock' }
-                                                'Stopping' { 'clock' }
-                                                default { 'question-circle' }
+                                            $statusIcon = switch -Regex ($EventData.Status) {
+                                                '^Running$|^Started$|^On$' { 'power-off' }
+                                                '^Stopped$|^Off$|^Shutdown$' { 'power-off' }
+                                                '^Starting$|^Booting$' { 'clock' }
+                                                '^Stopping$|^Shutting' { 'clock' }
+                                                default { 'server' }
                                             }
                                             New-UDChip -Label $EventData.Status -Color $statusColor -Variant default -Icon (New-UDIcon -Icon $statusIcon)
                                         }
@@ -253,15 +395,24 @@ $ManageLabsPage = New-UDPage -Url "/Manage-Labs" -Name "Manage Labs" -Content {
                                         New-UDTableColumn -Property Actions -Title 'VM Actions' -Render {
                                             New-UDStack -Direction row -Spacing 1 -Content {
                                                 New-UDButton -Text "Start" -Color success -Size small -Variant outlined -OnClick {
-                                                    # Add VM start logic here
-                                                    $psuScript = Get-PSUScript -Name 'Start VM' -AppToken $Secret:AU_Token -TrustCertificate
-                                                    Invoke-PSUScript -Script $psuscript -Parameters @{LabVM = $EventData.LabVM } -AppToken $Secret:AU_Token -TrustCertificate
+                                                    try {
+                                                        $psuscript = Get-PSUScript -Name 'PowerShellUniversal.Apps.AutomatedLab\Start-SingleVM' -TrustCertificate
+                                                        Invoke-PSUScript -Script $psuscript -Parameters @{LabVM = $EventData.LabVM } -TrustCertificate
+                                                        Sync-UDElement -Id "LabsContent"
+                                                    }
+                                                    catch {
+                                                        Show-UDToast -Message "Error starting VM: $($_.Exception.Message)" -Duration 5000
+                                                    }
                                                 } -Icon (New-UDIcon -Icon play)
                                                 New-UDButton -Text "Stop" -Color error -Size small -Variant outlined -OnClick {
-                                                    # Add VM stop logic here
-                                                    $psuScript = Get-PSUScript -Name 'Stop VM' -AppToken $Secret:AU_Token -TrustCertificate
-                                                    Invoke-PSUScript -Script $psuscript -Parameters @{LabVM = $EventData.LabVM } -AppToken $Secret:AU_Token -TrustCertificate
-
+                                                    try {
+                                                        $psuscript = Get-PSUScript -Name 'PowerShellUniversal.Apps.AutomatedLab\Stop-SingleVM' -TrustCertificate
+                                                        Invoke-PSUScript -Script $psuscript -Parameters @{LabVM = $EventData.LabVM } -TrustCertificate
+                                                        Sync-UDElement -Id "LabsContent"
+                                                    }
+                                                    catch {
+                                                        Show-UDToast -Message "Error stopping VM: $($_.Exception.Message)" -Duration 5000
+                                                    }
                                                 } -Icon (New-UDIcon -Icon stop)
                                             }
                                         }
@@ -320,7 +471,7 @@ $ManageLabsPage = New-UDPage -Url "/Manage-Labs" -Name "Manage Labs" -Content {
 
     # Footer
     New-UDElement -Tag div -Attributes @{ style = @{ 'position' = 'fixed'; 'bottom' = '0'; 'left' = '0'; 'right' = '0'; 'z-index' = '1000' } } -Content {
-        New-UDTypography -Text "AutomatedLab UI v1.1.1" -Variant caption -Align center -Style @{
+        New-UDTypography -Text "AutomatedLab UI v1.2.0" -Variant caption -Align center -Style @{
             'padding'          = '8px 16px'
             'opacity'          = '0.7'
             'background-color' = 'rgba(0,0,0,0.05)'
