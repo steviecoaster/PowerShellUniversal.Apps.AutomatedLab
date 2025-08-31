@@ -2,11 +2,8 @@
     $Session:LabParameters = [System.Collections.Generic.List[PSCustomObject]]::new()
     
     New-UDCard -Content {
-           # Footer
-    New-UDElement -Tag div -Attributes @{ style = @{ 'position' = 'fixed'; 'bottom' = '0'; 'left' = '0'; 'right' = '0'; 'z-index' = '1000' } } -Content {
-        New-UDTypography -Text "AutomatedLab UI v1.1.1" -Variant caption -Align center -Style @{
-            'padding'          = '8px 16px'
-            'opacity'          = '0.7'UDStack -Direction row -Spacing 2 -AlignItems flex-start -Content {
+
+        New-UDStack -Direction row -Spacing 2 -AlignItems flex-start -Content {
             New-UDIcon -Icon info-circle -Size lg -Color info -Style @{ 'margin-top' = '4px' }
             New-UDStack -Direction column -Content {
                 New-UDTypography -Variant h6 -Text 'What is a Lab Configuration?' -Style @{ 
@@ -43,7 +40,7 @@
             'font-weight'   = '500'
         }
 
-        New-UDForm -SubmitText 'Create Configuration' -OnSubmit {
+        New-UDForm -SubmitText 'Create Configuration' -ButtonVariant contained -OnSubmit {
             try {
                 # Prepare parameters for submission
                 $LabParams = @{}
@@ -224,7 +221,7 @@
 
     #Footer
     New-UDElement -Tag div -Attributes @{ style = @{ 'position' = 'fixed'; 'bottom' = '0'; 'left' = '0'; 'right' = '0'; 'z-index' = '1000' } } -Content {
-        New-UDTypography -Text "AutomatedLab UI v1.1.0" -Variant caption -Align center -Style @{
+        New-UDTypography -Text "AutomatedLab UI v1.2.0" -Variant caption -Align center -Style @{
             'padding'          = '8px 16px'
             'opacity'          = '0.7'
             'background-color' = 'rgba(0,0,0,0.05)'

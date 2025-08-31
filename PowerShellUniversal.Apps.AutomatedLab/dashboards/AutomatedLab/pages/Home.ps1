@@ -29,14 +29,13 @@
         }
 
         New-UDColumn -SmallSize 12 -MediumSize 6 -LargeSize 4 -Content {
-            New-UDCard -Title "Add Lab Configuration" -Content {
+            New-UDCard -Title "New Lab Configuration" -Content {
                 New-UDStack -Direction row -Spacing 2 -Content {
-                    New-UDIcon -Icon file-code  -Size lg
-                    New-UDTypography -Text "Configuration" -Variant body1
+                    New-UDIcon -Icon cogs -Size lg
+                    New-UDTypography -Text "Map Definitions to Labs" -Variant body1
                 }
-                New-UDButton -Text "Open Configuration Management" -Color primary -OnClick {
-                    # Add your VM management logic here
-                    Invoke-UDRedirect -Url '/New-Lab'
+                New-UDButton -Text "Create Configuration" -Color primary -OnClick {
+                    Invoke-UDRedirect -Url '/New-Configuration'
                 }
             } -Style @{
                 'text-align' = 'center'
@@ -81,14 +80,13 @@
 
     New-UDRow -Columns {
         New-UDColumn -SmallSize 12 -MediumSize 6 -LargeSize 4 -Content {
-            New-UDCard -Title "New Definition" -Content {
+            New-UDCard -Title "Lab Creation Wizard" -Content {
                 New-UDStack -Direction row -Spacing 2 -Content {
-                    New-UDIcon -Icon 'file-code' -Size lg
-                    New-UDTypography -Text "Definition Builder" -Variant body1
+                    New-UDIcon -Icon 'magic' -Size lg
+                    New-UDTypography -Text "Build Complete Labs" -Variant body1
                 }
-                New-UDButton -Text "Create Definition" -Color primary -OnClick {
-                    # Add your VM management logic here
-                    Invoke-UDRedirect -Url '/New-Definition'
+                New-UDButton -Text "Launch Wizard" -Color primary -OnClick {
+                    Invoke-UDRedirect -Url '/Create-Lab'
                 }
             } -Style @{
                 'text-align' = 'center'
@@ -101,7 +99,7 @@
 
     # Footer
     New-UDElement -Tag div -Attributes @{ style = @{ 'position' = 'fixed'; 'bottom' = '0'; 'left' = '0'; 'right' = '0'; 'z-index' = '1000' } } -Content {
-        New-UDTypography -Text "AutomatedLab UI v1.1.1" -Variant caption -Align center -Style @{
+        New-UDTypography -Text "AutomatedLab UI v1.2.0" -Variant caption -Align center -Style @{
             'padding'          = '8px 16px'
             'opacity'          = '0.7'
             'background-color' = 'rgba(0,0,0,0.05)'
