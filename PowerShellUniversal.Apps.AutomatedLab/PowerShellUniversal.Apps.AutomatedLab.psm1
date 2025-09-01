@@ -314,7 +314,31 @@ New-LabDefinition -Name '$($LabData.LabName)' -DefaultVirtualizationEngine Hyper
                 $script += " -NetworkAdapter @($($adapters -join ', '))"
             }
             $script += "`n"
-        }        $script += @"
+        }
+
+        $script += "`n"
+
+        # Add custom role assignments
+        $hasCustomRoles = $false
+        foreach ($vm in $LabData.VMs) {
+            if ($vm.CustomRoles -and $vm.CustomRoles.Count -gt 0) {
+                $hasCustomRoles = $true
+                break
+            }
+        }
+
+        if ($hasCustomRoles) {
+            $script += "# Apply custom roles to VMs`n"
+            foreach ($vm in $LabData.VMs) {
+                if ($vm.CustomRoles -and $vm.CustomRoles.Count -gt 0) {
+                    foreach ($role in $vm.CustomRoles) {
+                        $script += "Invoke-LabCommand -ComputerName '$($vm.Name)' -CustomRoleName $role `n"
+                    }
+                }
+            }
+        }
+
+        $script += @"
 
 Install-Lab
 
