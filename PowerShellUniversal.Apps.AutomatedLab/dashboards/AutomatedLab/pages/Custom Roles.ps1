@@ -1,6 +1,5 @@
 ﻿$CustomRolesPage = New-UDPage -Url "/Custom-Roles" -Name "Custom Roles" -Content {
-    $Script:CustomRoleFiles = [System.Collections.Generic.List[System.IO.FileSystemInfo]]::new()
-
+    $Session:CustomRoleFiles = [System.Collections.Generic.List[System.IO.FileSystemInfo]]::new()
 
     # Header section
     New-UDRow -Columns {
@@ -29,106 +28,181 @@
                 
                 Show-UDModal -Content {
                     New-UDForm -Id "CustomRoleForm" -Content {
-                        New-UDTypography -Text "Create New Custom Role" -Variant h5
-                        New-UDElement -Tag "br"
-                        New-UDTextbox -Id "RoleName" -Label "Role Name" -Placeholder "Enter role name"
-                        New-UDElement -Tag "br"
-                    
-                        # Init script handling
-                        New-UDTypography -Text 'Initialization Script' -Variant h6
-                        New-UDStack -Direction row -Spacing 5 -AlignItems center -Content {
-                            New-UDSelect -Id "InitScriptType" -Option {
-                                New-UDSelectOption -Name 'File' -Value 'File'
-                                New-UDSelectOption -Name 'Url' -Value 'Url'
-                            } -DefaultValue 'File'
-                            New-UDTextbox -Id 'InitScript' -Placeholder 'Init script location'
-                        }
-                        New-UDElement -Tag "br"
-                        
-                        # File Management Section
-                        New-UDTypography -Text 'Additional Files' -Variant h6
-                        New-UDStack -Direction row -Spacing 2 -AlignItems center -Content {
-                            New-UDTextbox -Id 'FilePath' -Placeholder 'Enter file path to add'
-                            New-UDButton -Text "Add File" -Color secondary -Size small -OnClick {
-                                $filePath = (Get-UDElement -Id 'FilePath').value -replace '"', ''
-                                
-                                if ([string]::IsNullOrWhiteSpace($filePath)) {
-                                    Show-UDToast -Message "Please enter a file path"
-                                    return
-                                }
-                                
-                                if (-not (Test-Path $filePath)) {
-                                    Show-UDToast -Message "File does not exist: $filePath"
-                                    return
-                                }
-                                
-                                try {
-                                    $file = Get-Item $filePath
-                                    $Script:CustomRoleFiles.Add($file)
-                                    
-                                    # Clear textbox and refresh table
-                                    Set-UDElement -Id 'FilePath' -Properties @{ value = "" }
-                                    Sync-UDElement -Id 'FilesTable'
-                                    Show-UDToast -Message "File added successfully"
-                                }
-                                catch {
-                                    Show-UDToast -Message "Error adding file: $($_.Exception.Message)"
+                        # Card 1: Information about roles
+                        New-UDCard -Content {
+                            New-UDStack -Direction row -Spacing 2 -AlignItems center -Content {
+                                New-UDIcon -Icon info-circle -Size lg -Color info
+                                New-UDStack -Direction column -Content {
+                                    New-UDTypography -Variant h6 -Text "About Custom Roles" -Style @{ 'margin-bottom' = '8px'; 'color' = '#1976d2' }
+                                    New-UDTypography -Variant body2 -Text "Custom roles define reusable configurations that can be applied to VMs during lab creation. Each role can include initialization scripts and additional files that will be deployed automatically." -Style @{ 'line-height' = '1.5' }
                                 }
                             }
+                        } -Style @{ 
+                            'margin-bottom' = '16px'
+                            'background' = 'linear-gradient(135deg, rgba(25, 118, 210, 0.08) 0%, rgba(25, 118, 210, 0.04) 100%)'
+                            'border-left' = '4px solid #1976d2'
                         }
-                        
-                        # Files Table
-                        New-UDDynamic -Id 'FilesTable' -Content {
-                            if ($Script:CustomRoleFiles -and $Script:CustomRoleFiles.Count -gt 0) {
-                                $columns = @(
-                                    New-UDTableColumn -Property Name -Title "File Name" -Render {
-                                        New-UDStack -Direction row -Spacing 1 -AlignItems center -Content {
-                                        
-                                            New-UDIcon -Icon file -Size sm -Color primary
-                                            New-UDTypography -Text $EventData.Name -Variant body2
-                                        }
+
+                        # Card 2: Role Name
+                        New-UDCard -Content {
+                            New-UDStack -Direction column -Spacing 2 -Content {
+                                New-UDStack -Direction row -Spacing 1 -AlignItems center -Content {
+                                    New-UDIcon -Icon tag -Size sm -Color primary
+                                    New-UDTypography -Variant h6 -Text "Role Identification" -Style @{ 'color' = '#9C27B0' }
+                                }
+                                New-UDTypography -Variant body2 -Text "Choose a descriptive name for your custom role. This name will be used to identify the role in your lab configurations." -Style @{ 'margin-bottom' = '12px'; 'opacity' = '0.8' }
+                                New-UDTextbox -Id "RoleName" -Label "Role Name" -Placeholder "e.g., WebServer, DomainController, DatabaseServer" -FullWidth -Icon (New-UDIcon -Icon cogs)
+                            }
+                        } -Style @{ 
+                            'margin-bottom' = '16px'
+                            'background-color' = 'rgba(156, 39, 176, 0.04)'
+                            'border' = '1px solid rgba(156, 39, 176, 0.2)'
+                        }
+
+                        # Card 3: Initialization Script
+                        New-UDCard -Content {
+                            New-UDStack -Direction column -Spacing 2 -Content {
+                                New-UDStack -Direction row -Spacing 1 -AlignItems center -Content {
+                                    New-UDIcon -Icon code -Size sm -Color success
+                                    New-UDTypography -Variant h6 -Text "Initialization Script" -Style @{ 'color' = '#4CAF50' }
+                                }
+                                New-UDTypography -Variant body2 -Text "Define how your role should be initialized. You can specify a local PowerShell script file or provide a URL to download a script from the internet." -Style @{ 'margin-bottom' = '12px'; 'opacity' = '0.8' }
+                                New-UDGrid -Container -Spacing 2 -Content {
+                                    New-UDGrid -Item -SmallSize 4 -Content {
+                                        New-UDSelect -Id "InitScriptType" -Label "Script Source" -FullWidth -Option {
+                                            New-UDSelectOption -Name 'Local File' -Value 'File'
+                                            New-UDSelectOption -Name 'URL Download' -Value 'Url'
+                                        } -DefaultValue 'File' -Icon (New-UDIcon -Icon file-code)
                                     }
-                                    New-UDTableColumn -Property Size -Title "Size" -Render {
-                                        New-UDTypography -Text $([Math]::Round(( $EventData.Size / 1kb), 2)) -Variant body2
+                                    New-UDGrid -Item -SmallSize 8 -Content {
+                                        New-UDTextbox -Id 'InitScript' -Label "Script Location" -Placeholder 'C:\Scripts\MyRole.ps1 or https://example.com/script.ps1' -FullWidth -Icon (New-UDIcon -Icon link)
                                     }
-                                    New-UDTableColumn -Property Type -Title "Type" -Render {
-                                        if ($EventData.PSIsContainer -eq "True") {
-                                            New-UDChip -Label "Folder" -Color default -Size small
-                                        }
-                                        else {
-                                            New-UDChip -Label 'File' -Color primary -Size small -Variant outlined
-                                        }
+                                }
+                            }
+                        } -Style @{ 
+                            'margin-bottom' = '16px'
+                            'background-color' = 'rgba(76, 175, 80, 0.04)'
+                            'border' = '1px solid rgba(76, 175, 80, 0.2)'
+                        }
+
+                        # Card 4: Additional Files
+                        New-UDCard -Content {
+                            New-UDStack -Direction column -Spacing 2 -Content {
+                                New-UDStack -Direction row -Spacing 1 -AlignItems center -Content {
+                                    New-UDIcon -Icon folder-open -Size sm -Color warning
+                                    New-UDTypography -Variant h6 -Text "Additional Files" -Style @{ 'color' = '#FF9800' }
+                                }
+                                New-UDTypography -Variant body2 -Text "Include additional files or folders that should be deployed with this role. These files will be copied to the target VMs when the role is applied." -Style @{ 'margin-bottom' = '12px'; 'opacity' = '0.8' }
+                                New-UDGrid -Container -Spacing 1 -Content {
+                                    New-UDGrid -Item -SmallSize 8 -Content {
+                                        New-UDTextbox -Id 'FilePath' -Label "File or Folder Path" -Placeholder 'C:\MyFiles\config.xml or C:\MyFolder\' -FullWidth -Icon (New-UDIcon -Icon folder)
                                     }
-                                    New-UDTableColumn -Property Actions -Title "Actions" -Render {
-                                        New-UDButton -Text "Remove" -Color error -Size small -Variant outlined -OnClick {
-                                            # Find and remove the item from the List collection
-                                            #$itemToRemove = $Script:CustomRoleFiles | Where-Object { $_.FullName -eq $EventData }
-                                            Show-UDToast -Message $Script:CustomRoleFiles
-                                            if ($itemToRemove) {
-                                                Show-UDToast -Message "Will remove: $itemToRemove"
-                                                $Script:CustomRoleFiles.Remove($itemToRemove)
+                                    New-UDGrid -Item -SmallSize 4 -Content {
+                                        New-UDButton -Text "Add File" -Color warning -Size medium -FullWidth -OnClick {
+                                            $filePath = (Get-UDElement -Id 'FilePath').value -replace '"', ''
+                                            
+                                            if ([string]::IsNullOrWhiteSpace($filePath)) {
+                                                Show-UDToast -Message "Please enter a file path" 
+                                                return
+                                            }
+                                            
+                                            if (-not (Test-Path $filePath)) {
+                                                Show-UDToast -Message "File does not exist: $filePath" 
+                                                return
+                                            }
+                                            
+                                            try {
+                                                $file = Get-Item $filePath
+                                                $Session:CustomRoleFiles.Add($file)
+                                                
+                                                # Clear textbox and refresh table
+                                                Set-UDElement -Id 'FilePath' -Properties @{ value = "" }
                                                 Sync-UDElement -Id 'FilesTable'
-                                                Show-UDToast -Message 'File removed successfully!'
                                             }
-                                            else {
-                                                Show-UDToast -Message "File not found in collection"
+                                            catch {
+                                                Show-UDToast -Message "Error adding file: $($_.Exception.Message)" 
                                             }
-                                        } -Icon (New-UDIcon -Icon trash)
+                                        } -Icon (New-UDIcon -Icon plus)
                                     }
-                                )
+                                }
                                 
-                                New-UDCard -Content {
-                                    New-UDTypography -Text "Files to Include ($($Script:CustomRoleFiles.Count))" -Variant subtitle2 -Style @{ 'margin-bottom' = '8px' }
-                                    New-UDTable -Data $Script:CustomRoleFiles -Id 'AdditionalFilesTableData' -Columns $columns -Dense -PageSize 5
-                                } -Style @{ 'margin-top' = '12px'; 'background-color' = 'rgba(76, 175, 80, 0.04)' }
+                                # Files Table
+                                New-UDDynamic -Id 'FilesTable' -Content {
+                                    if ($Session:CustomRoleFiles -and $Session:CustomRoleFiles.Count -gt 0) {
+                                        $columns = @(
+                                            New-UDTableColumn -Property Name -Title "File Name" -Render {
+                                                New-UDStack -Direction row -Spacing 1 -AlignItems center -Content {
+                                                    New-UDIcon -Icon file -Size sm -Color primary
+                                                    New-UDTypography -Text $EventData.Name -Variant body2 -Style @{ 'font-weight' = '500' }
+                                                }
+                                            }
+                                            New-UDTableColumn -Property Length -Title "Size" -Render {
+                                                if ($EventData.PSIsContainer) {
+                                                    New-UDChip -Label "Folder" -Color default -Size small
+                                                }
+                                                else {
+                                                    try {
+                                                        
+                                                        if ($EventData.Length -and $EventData.Length -gt 0) {
+                                                            $sizeMB = [Math]::Round(($EventData.Length / 1mb), 2)
+                                                            New-UDChip -Label "$sizeMB MB" -Color default -Size small
+                                                        } else {
+                                                            New-UDChip -Label "0 KB" -Color default -Size small
+                                                        }
+                                                    }
+                                                    catch {
+                                                        New-UDChip -Label "N/A" -Color default -Size small
+                                                    }
+                                                }
+                                            }
+                                            New-UDTableColumn -Property Type -Title "Type" -Render {
+                                                if ($EventData.PSIsContainer) {
+                                                    New-UDChip -Label "Folder" -Color info -Size small -Icon (New-UDIcon -Icon folder)
+                                                }
+                                                else {
+                                                    New-UDChip -Label 'File' -Color primary -Size small -Variant outlined -Icon (New-UDIcon -Icon file)
+                                                }
+                                            }
+                                            New-UDTableColumn -Property Actions -Title "Actions" -Render {
+                                                New-UDButton -Text "Remove" -Color error -Size small -Variant outlined -OnClick {
+                                                    # Find and remove the item from the List collection
+                                                    Show-UDToast -Message $EventData
+                                                    $itemToRemove = $Session:CustomRoleFiles | Where-Object { $_.FullName -eq $EventData }
+                                                    if ($itemToRemove) {
+                                                        $Session:CustomRoleFiles.Remove($itemToRemove)
+                                                        Sync-UDElement -Id 'FilesTable'
+                                                    }
+                                                    else {
+                                                        Show-UDToast -Message "File not found in collection" 
+                                                    }
+                                                } -Icon (New-UDIcon -Icon trash)
+                                            }
+                                        )
+                                        
+                                        New-UDCard -Content {
+                                            New-UDStack -Direction row -Spacing 1 -AlignItems center -Content {
+                                                New-UDIcon -Icon files -Size sm -Color success
+                                                New-UDTypography -Text "Files to Include ($($Session:CustomRoleFiles.Count))" -Variant subtitle2 -Style @{ 'color' = '#4CAF50'; 'font-weight' = 'bold' }
+                                            }
+                                            New-UDTable -Data $Session:CustomRoleFiles -Id 'AdditionalFilesTableData' -Columns $columns -Dense -PageSize 5
+                                        } -Style @{ 'margin-top' = '12px'; 'background-color' = 'rgba(76, 175, 80, 0.08)'; 'border' = '1px solid rgba(76, 175, 80, 0.3)' }
+                                    }
+                                    else {
+                                        New-UDCard -Content {
+                                            New-UDStack -Direction column -Spacing 1 -AlignItems center -Content {
+                                                New-UDIcon -Icon file-plus -Size lg -Color disabled
+                                                New-UDTypography -Text "No additional files added" -Variant body2 -Align center -Style @{ 'opacity' = '0.6'; 'font-weight' = '500' }
+                                                New-UDTypography -Text "Files are optional but can enhance your role's functionality" -Variant caption -Align center -Style @{ 'opacity' = '0.5' }
+                                            }
+                                        } -Style @{ 'margin-top' = '12px'; 'border' = '2px dashed rgba(0,0,0,0.12)'; 'padding' = '20px'; 'text-align' = 'center' }
+                                    }
+                                }
                             }
-                            else {
-                                New-UDCard -Content {
-                                    New-UDTypography -Text "No additional files added" -Variant body2 -Align center -Style @{ 'opacity' = '0.6'; 'padding' = '16px' }
-                                } -Style @{ 'margin-top' = '12px'; 'border' = '1px dashed rgba(0,0,0,0.12)' }
-                            }
+                        } -Style @{ 
+                            'background-color' = 'rgba(255, 152, 0, 0.04)'
+                            'border' = '1px solid rgba(255, 152, 0, 0.2)'
                         }
-                    } -SubmitText 'Create Role' -OnSubmit {
+                    } -SubmitText 'Create Role' -ButtonVariant contained -OnSubmit {
                     
                         # Get form values from EventData
                         $RoleName = $EventData.RoleName
@@ -163,31 +237,31 @@
                             }
                             
                             # Add additional files if any were selected
-                            if ($Script:CustomRoleFiles -and $Script:CustomRoleFiles.Count -gt 0) {
-                                $Params.AdditionalFiles = $Script:CustomRoleFiles.FullName
+                            if ($Session:CustomRoleFiles -and $Session:CustomRoleFiles.Count -gt 0) {
+                                $Params.AdditionalFiles = $Session:CustomRoleFiles.FullName
                             }
-                            
-                            $additionalData = Get-UDElement -Id 'AdditionalFilesTableData'
                         
                             # Create the custom role
                             New-CustomRole -Name $RoleName @Params
                             
                             # Clear the files collection after successful creation
-                            $Script:CustomRoleFiles.Clear()
+                            $Session:CustomRoleFiles.Clear()
                             
-                            Show-UDToast -Message "Custom role '$RoleName' created successfully!"
                             Hide-UDModal
                             Sync-UDElement -Id CustomRolesTable
                             
                         }
                         catch {
-                            Show-UDToast -Message "Error creating custom role: $($_.Exception.Message)"
+                            Show-UDToast -Message "Error creating custom role: $($_.Exception.Message)" 
                         }
                     }
                     
                 } -Header {
-                    New-UDTypography -Text "Add Custom Role" -Variant h4
-                }
+                    New-UDStack -Direction row -Spacing 2 -AlignItems center -Content {
+                        New-UDIcon -Icon plus-circle -Size lg -Color primary
+                        New-UDTypography -Text "Create New Custom Role" -Variant h4 -Style @{ 'color' = '#9C27B0' }
+                    }
+                } -MaxWidth 'lg' -FullWidth
             }
         }
     }
@@ -251,7 +325,7 @@
                                     }
                                 }
                                 New-UDTableColumn -Property FilesCount -Title "Files" -Render {
-                                    New-UDChip -Label "$($EventData.FilesCount) files" -Color default -Variant default
+                                    New-UDChip -Label "$($EventData.FilesCount) files" -Color default
                                 }
                                 New-UDTableColumn -Property Created -Title "Created" -Render {
                                     New-UDTypography -Text $EventData.Created.ToString("yyyy-MM-dd HH:mm") -Variant body2
@@ -318,7 +392,6 @@
                                                     try {
                                                         Remove-Item -Path $EventData.Path -Recurse -Force
                                                     
-                                                        Show-UDToast -Message "Custom role '$($EventData.Name)' removed successfully!"
                                                         Hide-UDModal
                                                         Sync-UDElement -Id CustomRolesTable
                                                     }
@@ -341,7 +414,7 @@
                             # Empty state
                             New-UDCard -Content {
                                 New-UDStack -Direction column -Spacing 2 -AlignItems center -Content {
-                                    New-UDIcon -Icon cogs -Size '3x' -Color disabled -Style @{ 'opacity' = '0.5' }
+                                    New-UDIcon -Icon cogs -Size '3x' -Color disabled
                                     New-UDTypography -Variant h6 -Text "No Custom Roles Found" -Align center
                                     New-UDTypography -Variant body2 -Text "Create your first custom role to get started." -Align center -Style @{ 'opacity' = '0.7' }
                                 }
@@ -387,6 +460,4 @@
             'border-top'       = '1px solid rgba(0,0,0,0.12)'
         }
     }
-
-
 }
