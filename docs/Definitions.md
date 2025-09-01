@@ -1,321 +1,365 @@
-# AutomatedLab Definition Builder
+# AutomatedLab Creation Wizard
 
-The **New Definition** page provides a graphical, step-by-step interface for creating AutomatedLab definition scripts. This wizard-based approach helps you design lab environments without writing PowerShell code directly.
+The **Create A Lab** page provides an intuitive, step-by-step wizard interface for building complete AutomatedLab definition scripts. This modern wizard guides you through lab creation with real-time validation, dynamic forms, and visual feedback.
 
 ## Overview
 
 AutomatedLab definitions are PowerShell scripts that specify:
 
-- Virtual machines and their specifications (CPU, memory, operating system)
+- Virtual machines with detailed specifications (CPU, memory, operating system)
 - Virtual networking configuration (switches, subnets, IP addressing)
-- Network connectivity between VMs
-- Infrastructure requirements for your lab environment
+- Network connectivity and adapter assignments for each VM
+- Complete infrastructure requirements for your lab environment
 
-The Definition Builder automates the creation of these scripts through an intuitive web interface.
+The Creation Wizard automates the generation of these scripts through a guided, 4-step process that requires no PowerShell knowledge.
 
-## Step-by-Step Process
+## Interface Features
 
-The New Definition page uses a 4-step wizard to guide you through lab creation:
+### Modern Wizard Design
+
+- **Progressive Stepper**: Visual step indicator showing current progress
+- **Dynamic Loading**: Automatic detection of available OS images and network adapters
+- **Real-time Validation**: Immediate feedback on form inputs and configuration errors
+- **Responsive Layout**: Adapts to different screen sizes and devices
+- **Session Management**: Preserves your work as you navigate between steps
+
+### Smart Data Detection
+
+The wizard automatically loads system information:
+
+- **Operating Systems**: Scans AutomatedLab ISO directory for available OS images
+- **Network Adapters**: Detects active physical network interfaces for external switch configuration
+
+## Step-by-Step Wizard Process
 
 ### Step 1: Lab Information
 
-Configure basic lab metadata:
+Configure the basic metadata for your lab environment.
 
-- **Lab Name**: A descriptive name for your lab environment
-  - Examples: "Active Directory Lab", "Exchange Environment", "Development Cluster"
-  - Avoid special characters and keep names descriptive
-- **Lab Description** _(Optional)_: Brief description of the lab's purpose and scope
-  - Helps document the lab's intended use case
-  - Useful for team environments and lab management
+#### Lab Configuration
+
+**Lab Name**:
+
+- Required field for identifying your lab
+- Examples: "Active Directory Lab", "Exchange Environment", "Development Cluster"
+- Used in generated script names and lab management
+- Avoid special characters for compatibility
+
+**Lab Description** _(Optional)_:
+
+- Multi-line text field for detailed documentation
+- Describes the lab's purpose, scope, and intended use
+- Helpful for team environments and future reference
+- Included as comments in generated scripts
 
 ### Step 2: Virtual Switch Configuration
 
-Define the network infrastructure for your lab environment.
+Define the network infrastructure that connects your virtual machines.
 
-#### Virtual Switch Types
+#### Understanding Switch Types
 
-##### Default Switch (Recommended for Internet Access)
+**Default Switch (Recommended)**:
 
 - Provides NAT-based internet connectivity
 - Automatically configured by Hyper-V
-- Best for labs that need external internet access
+- Best choice for labs requiring external internet access
+- Pre-added to every new lab for convenience
 - No additional configuration required
 
-##### Internal Switch
+**Internal Switch**:
 
-- Creates isolated networks between VMs
-- Requires manual IP configuration
-- Best for secure, isolated environments
+- Creates isolated networks between VMs only
+- Requires manual IP configuration and addressing
+- Best for secure, air-gapped environments
 - Configuration options:
   - **Address Space**: CIDR notation (e.g., `192.168.1.0/24`)
   - **Gateway IP**: Optional gateway address (e.g., `192.168.1.1`)
 
-##### External Switch
+**External Switch**:
 
-- Bridges VMs to physical network adapters
-- Provides direct access to physical network
-- Requires specifying physical adapter name
-- Configuration options:
-  - **Physical Adapter Name**: Network adapter to bridge (e.g., "Ethernet", "Wi-Fi")
+- Bridges VMs directly to physical network adapters
+- Provides access to your physical network infrastructure
+- Automatically detects available network adapters
 
 #### Adding Virtual Switches
 
-1. Enter a **Virtual Switch Name** (e.g., "Internal", "Management", "DMZ")
-2. Select the **Switch Type** from the dropdown
-3. Configure type-specific settings (if required)
-4. Click **Add Virtual Switch**
-5. Use **Add Default Switch** button for quick NAT setup
+1. **Enter Switch Name**: Descriptive name like "Internal", "Management", or "DMZ"
+2. **Select Switch Type**: Choose from the dropdown with clear descriptions
+3. **Configure Type-Specific Settings**: 
+   - Internal: Address space and optional gateway fields appear
+   - External: Physical adapter selection dropdown appears
+   - Default Switch: No additional configuration needed
+4. **Add Switch**: Click "Add Virtual Switch" to save configuration
+5. **View Summary**: All configured switches appear in a detailed table
 
-#### Switch Management
-
-- View all configured switches in the summary table
-- Remove switches using the **Remove** button
-- Switch details show type, addressing, and configuration
-
-**Requirements**: Define at least one virtual switch before proceeding to VM configuration.
+**Important**: At least one virtual switch must be defined before proceeding to VM configuration.
 
 ### Step 3: Virtual Machine Configuration
 
-Design and configure virtual machines for your lab environment.
+Design and configure virtual machines with detailed specifications and network connectivity.
 
-#### VM Specifications
+#### VM Specification Interface
 
-**Basic Configuration**:
+**Basic VM Information Card**:
 
-- **VM Name**: Unique identifier for the virtual machine
-  - Use descriptive names: "DC01", "WEB01", "CLIENT01"
-  - Follow consistent naming conventions
-- **VM Size**: Predefined resource templates
-  - **Small**: 2 CPU cores, 4GB RAM
-  - **Medium**: 4 CPU cores, 8GB RAM  
-  - **Large**: 8 CPU cores, 16GB RAM
-- **Operating System**: Select from available OS images
-  - Automatically populated from `Get-LabAvailableOperatingSystem`
-  - Includes Windows Server and client operating systems
-  - Falls back to common options if detection fails
+**VM Name**:
+
+- Unique identifier for the virtual machine
+- Placeholder guidance: "e.g., DC01, WEB01, CLIENT01"
+- Validation prevents duplicate names
+
+**VM Size Templates**:
+
+- **Small**: 2 CPU cores, 4GB RAM - Ideal for basic services
+- **Medium**: 4 CPU cores, 8GB RAM - Good for most server roles
+- **Large**: 8 CPU cores, 16GB RAM - High-performance applications
+- **Custom**: Specify exact CPU cores and RAM requirements
+
+**Operating System Selection**:
+
+- Dynamically populated from `Get-LabAvailableOperatingSystem`
+- Shows available Operating Systems based on discovered ISOs
+- Error handling for missing ISO files with guidance to ISO management
 
 #### Network Interface Configuration
 
-Each VM requires at least one network interface card (NIC) to connect to virtual switches.
+**Network Configuration Card** _(Conditional Display)_:
+
+- Only appears after virtual switches are configured
+- Warning message if no switches are available
 
 **Adding Network Adapters**:
 
-1. Select a **Virtual Switch** from configured switches
-2. Choose **IP Assignment** method:
-   - **DHCP (Automatic)**: Automatic IP configuration
-   - **Static IP**: Manual IP configuration
-3. For static IP configuration, specify:
-   - **IP Address**: Static IP address for the interface
+1. **Virtual Switch Selection**: Dropdown showing all configured switches with network details
+2. **IP Assignment Method**:
+   - **DHCP (Automatic)**: Default option, no additional configuration
+   - **Static IP**: Reveals static configuration fields
+3. **Static IP Configuration** _(Conditional)_:
+   - **IP Address**: Static IP for the interface
    - **Gateway**: Default gateway address
-   - **DNS Server**: DNS server address
-4. Click **Add NIC** to attach the adapter to the VM
+   - **DNS Server**: DNS server configuration
+4. **Add Adapter**: Creates network interface with automatic naming (Ethernet1, Ethernet2, etc.)
 
 **NIC Management**:
 
-- Multiple NICs per VM supported for complex networking
-- Interfaces automatically named (Ethernet1, Ethernet2, etc.)
-- Remove NICs using the **Remove** button
-- View NIC configuration in the summary table
+- **Live Table**: Shows all configured adapters for current VM
+- **Detailed Display**: Interface name, switch assignment, IP configuration summary
+- **Remove Functionality**: Individual remove buttons with automatic renumbering
+- **Multiple Adapters**: Support for complex multi-homed network configurations
 
-#### Adding Virtual Machines
+#### VM Creation Process
 
-1. Configure VM specifications (name, size, OS)
-2. Add at least one network adapter
-3. Click **Add Virtual Machine**
-4. VM appears in the summary table with full configuration
+1. **Configure Basic Specifications**: Name, size, and operating system
+2. **Add Network Adapters**: At least one adapter required for network connectivity
+3. **Add VM to Lab**: Large, prominent button to finalize VM configuration
+4. **Form Validation**: Comprehensive validation before adding VM
+5. **Auto-Clear**: Form resets for adding additional VMs
 
-**VM Management**:
+#### VM Management Interface
 
-- View all configured VMs with specifications
-- See network adapter assignments per VM
-- Remove VMs using the **Remove** button
-- Modify by removing and re-adding
+**Defined Virtual Machines Table**:
 
-### Step 4: Review and Generate
+- Shows all configured VMs with complete specifications
+- Columns: Name, Size, CPU Cores, RAM, Operating System, Network Adapters
+- **Network Adapter Summary**: Count and detailed connection information
+- **Remove Functionality**: Individual remove buttons for each VM
+- **Resource Tracking**: Visual summary of total lab resource requirements
+
+### Step 4: Finalize Lab
 
 Review your complete lab configuration and generate the PowerShell definition script.
 
-#### Lab Summary
+#### Lab Configuration Summary
 
-The summary displays:
-
-**Lab Information**:
+**Lab Information Panel**:
 
 - Lab name and description
-- Count of virtual switches and VMs
-- Total resource allocation (CPU cores, RAM)
+- Count of virtual switches and virtual machines
+- Quick overview of lab scope and complexity
 
-**Resource Summary**:
+**Resources Summary Panel**:
 
-- Combined CPU and memory requirements
-- Network adapter assignments
-- Infrastructure overview
+- Total CPU cores across all VMs
+- Total RAM allocation for the lab
+- Resource planning information for host system requirements
 
-#### Definition Generation
+#### Definition Script Generation
 
-**Generate & Download Lab Definition**:
+**Editable Code Preview**:
 
-- Creates a complete AutomatedLab PowerShell script
-- Downloads as `.ps1` file with timestamp
-- Ready to use with AutomatedLab commands
-- Includes all VM, network, and configuration details
+- **Syntax-Highlighted Editor**: Full PowerShell script with color coding
+- **Customization Support**: Modify the generated script before saving
+- **Real-time Generation**: Script updates based on your configuration
 
-**Preview Lab Definition**:
+#### Saving and Management
 
-- Shows the generated PowerShell code
-- Syntax-highlighted code editor
-- Read-only preview for verification
-- Allows review before download
+**Save Lab Button**:
 
-**Start New Lab**:
+- Automatically saves definition to AutomatedLab configuration directory
+- Downloads script file with timestamp for external storage
+- Creates lab configuration entry for management interface
 
-- Clears all configuration data
-- Resets wizard to step 1
-- Begins fresh lab design process
+**Post-Save Actions** _(Revealed after saving)_:
+
+- **Manage Labs**: Direct navigation to lab management interface
+- **Start New Lab**: Reset wizard and begin creating another lab
+- **Session Management**: Complete cleanup of wizard state
+
+#### Validation and Error Prevention
+
+**Comprehensive Validation**:
+
+- Ensures at least one virtual switch is configured
+- Requires at least one virtual machine with network connectivity
+- Validates unique names for VMs and switches
+- Checks resource allocation conflicts
+- Provides clear error messages for resolution
 
 ## Generated Definition Structure
 
-The Definition Builder creates PowerShell scripts with this structure:
+The Creation Wizard produces complete AutomatedLab PowerShell scripts with this structure:
 
 ```powershell
 # Lab: [Your Lab Name]
 # Description: [Your Description]
 # Generated: [Timestamp]
+# AutomatedLab UI v1.2.0
 
 # Initialize the lab
 New-LabDefinition -Name '[Lab Name]' -DefaultVirtualizationEngine HyperV
 
 # Add virtual switches
-Add-LabVirtualNetworkDefinition -Name '[Switch Name]' -VirtualizationEngine HyperV
+Add-LabVirtualNetworkDefinition -Name '[Switch Name]' -VirtualizationEngine HyperV -AddressSpace '[CIDR]'
 
-# Configure machines
+# Configure virtual machines
 Add-LabMachineDefinition -Name '[VM Name]' `
     -OperatingSystem '[OS Name]' `
     -Processors [CPU Count] `
     -Memory [RAM in GB]GB `
-    -Network '[Network Name]'
+    -Network '[Network Name]' `
+    -IpAddress '[IP Address]'
 
 # Install the lab
 Install-Lab
 ```
 
-## Best Practices
+## Best Practices for Using the Wizard
 
-### Planning Your Lab
+### Wizard Navigation Tips
 
-**Network Design**:
+**Session Persistence**:
 
-- Start with network requirements before VMs
-- Use Default Switch for internet access needs
-- Create Internal switches for secure communication
-- Document IP addressing schemes
+- Your work is automatically saved as you progress through steps
+- You can navigate back to previous steps to make changes
+- Changes in earlier steps automatically update later configurations
 
-**VM Sizing**:
+**Form Management**:
 
-- Start with smaller VMs and scale up if needed
-- Consider your host system's resource limitations
-- Plan for concurrent VM operations
-- Account for host OS resource requirements
+- Use clear, descriptive names for labs, VMs, and switches
+- Take advantage of placeholder text for formatting guidance
+- Validate configurations at each step before proceeding
 
-**Naming Conventions**:
+**Error Resolution**:
 
-- Use consistent naming patterns
-- Include role indicators (DC, WEB, SQL, CLIENT)
-- Number similar VMs sequentially (WEB01, WEB02)
-- Avoid special characters and spaces
+- Pay attention to validation messages and alerts
+- Resolve issues immediately rather than proceeding with errors
+- Use the comprehensive help text and tooltips provided
 
-### Resource Planning
+### Advanced Customization
 
-**System Requirements**:
+**Script Editing**:
 
-- Ensure adequate host RAM for all VMs
-- Plan for concurrent VM operations
-- Consider storage requirements for VM disks
-- Account for network bandwidth needs
+- The final step allows direct PowerShell script modification
+- Add custom configurations not covered by the wizard
+- Include additional AutomatedLab features and settings
+- Modify resource allocations or add specialized configurations
 
-**Performance Optimization**:
+**Template Creation**:
 
-- Don't over-provision resources initially
-- Monitor resource usage during lab operation
-- Scale resources based on actual usage patterns
-- Consider using checkpoints for state management
+- Save generated scripts as templates for future labs
+- Create standardized configurations for common lab types
+- Version control definition files for team collaboration
+- Document custom modifications for reuse
 
-## Integration with Lab Configurations
+## Integration with Lab Management
 
-Once your definition is generated:
+### Workflow Integration
 
-1. **Save the Definition File**: Store in a consistent location for reuse
-2. **Create Lab Configuration**: Use the "New Lab" page to map the definition to a lab instance
-3. **Manage the Lab**: Start, stop, and monitor through the "Manage Labs" page
-4. **Customize Further**: Edit the generated script for advanced scenarios
+1. **Create Definition**: Use the wizard to build your lab script
+2. **Save Configuration**: Script is saved and configuration is created automatically
+3. **Manage Labs**: Navigate directly to lab management interface
+4. **Start/Monitor**: Use the management interface to start and monitor lab deployment
 
-## Troubleshooting
+## Troubleshooting Common Issues
 
-### Common Issues
+### Wizard Loading Issues
+
+#### "Loading lab configuration data..."
+
+**Cause**: System detection of operating systems or network adapters
+**Resolution**: 
+- Wait for automatic detection to complete
+- Check AutomatedLab ISO directory for OS files
+- Verify network adapter availability
 
 #### "No Operating Systems Available"
 
-- Verify AutomatedLab module is properly installed
-- Check if `Get-LabAvailableOperatingSystem` command works
-- Ensure ISO files or VM templates are available
-- Falls back to default OS options automatically
+**Cause**: No ISO files found in AutomatedLab ISO directory
+**Resolution**:
+- Add ISO files to your configured ISO directory
+- Use the ISO Management page to verify ISO locations
+- Check AutomatedLab module installation and configuration
 
-#### "Please Define Virtual Switches First"
+### Configuration Issues
 
-- Complete Step 2 before proceeding to VM configuration
-- At least one virtual switch is required
-- Use "Add Default Switch" for quick setup
+#### "Please define virtual switches first"
 
-#### "Please Add Network Adapters"
+**Cause**: Attempting to configure VMs without network infrastructure
+**Resolution**:
 
-- Each VM requires at least one network interface
-- Select a virtual switch before adding the VM
-- Use DHCP for simple configurations
+- Return to Step 2 and configure at least one virtual switch
+- Use "Add Default Switch" for quick internet-connected setup
 
-#### Resource Planning Issues
+#### "Please add network adapters"
 
-- Total VM resources exceed host capabilities
-- Consider smaller VM sizes or fewer concurrent VMs
-- Monitor host resource usage during operation
+**Cause**: Attempting to add VM without network connectivity
+**Resolution**:
 
-### Validation
+- Configure at least one network adapter per VM
+- Select appropriate virtual switch for VM connectivity
 
-The wizard validates:
+#### "VM name already exists"
 
-- Unique VM and switch names
-- Required network adapters for each VM
-- Minimum configuration requirements
-- Resource allocation conflicts
+**Cause**: Duplicate VM names in configuration
+**Resolution**:
 
-## Advanced Usage
+- Use unique, descriptive names for each VM
+- Follow consistent naming conventions (DC01, WEB02, etc.)
 
-### Manual Customization
+### Resource Planning Issues
 
-Generated definitions can be manually edited for:
+#### Host Resource Limitations
 
-- Advanced networking configurations
-- Custom software installations
-- Domain controller setup
-- Specialized role configurations
-- PowerShell DSC integration
+**Cause**: Total VM resources exceed host system capabilities
+**Resolution**:
 
-### Template Reuse
+- Use smaller VM size templates (Small instead of Large)
+- Reduce the number of concurrent VMs
+- Monitor host resource usage during lab operation
 
-- Save successful definitions as templates
-- Modify existing definitions for new scenarios
-- Share definitions across teams
-- Version control definition files
+#### Network Configuration Conflicts
 
-### Integration Points
+**Cause**: IP address conflicts or invalid network configurations
+**Resolution**:
 
-- Use with AutomatedLab.Utils for advanced features
-- Integrate with CI/CD pipelines for automated lab provisioning
-- Combine with custom roles for specialized configurations
-- Export/import lab configurations for portability
+- Use proper CIDR notation for address spaces
+- Ensure static IP addresses are within configured subnets
+- Avoid overlapping address ranges between switches
 
 ## Related Resources
 
-- **Lab Configurations**: See [Configurations documentation](./Configurations.md) for mapping definitions to lab instances
-- **Custom Roles**: See [Roles documentation](./Roles.md) for specialized machine configurations
+- **Lab Management**: See [Lab Management documentation](./Labs.md) for starting and monitoring created labs
+- **Lab Configurations**: See [Configurations documentation](./Configurations.md) for understanding lab configuration concepts
+- **Custom Roles**: See [Roles documentation](./Roles.md) for specialized machine configurations beyond the wizard
 - **AutomatedLab Documentation**: Official AutomatedLab project documentation
 - **AutomatedLab.Utils**: [Extended utilities and features](https://github.com/steviecoaster/automatedlab.utils)

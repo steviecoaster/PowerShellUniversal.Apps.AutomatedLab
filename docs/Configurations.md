@@ -17,31 +17,54 @@ The lab configuration system consists of two main components:
    - Software installations and configurations
    - Domain controllers, clients, and specialized roles
 
-2. **Create a Lab Configuration**: The `New Lab` page allows you to:
+2. **Create a Lab Configuration**: The `New Configuration` page allows you to:
    - Give your lab a meaningful name
    - Map it to a definition file (local file or URL)
-   - Add custom parameters for the definition
-   - Bring the lab under management
+   - Add and manage custom parameters for the definition
+   - Save the configuration for easy lab management
 
 ## Using the New Lab Configuration Page
 
 ### Step-by-Step Process
 
-1. **Navigate to New Lab**: Open the `New Lab` page from the navigation menu
+1. **Navigate to New Configuration**: Open the `New Configuration` page from the navigation menu
 
-2. **Provide Lab Details**:
-   - **Lab Name**: Choose a descriptive name for your lab instance
-   - **Definition Source**: Select either:
+2. **Review the Information**:
+   - The top section explains what lab configurations are
+   - Includes helpful tips about PowerShell-based definitions
+   - Provides context for why parameters are useful
+
+3. **Provide Lab Details**:
+   - **Lab Name**: Enter a descriptive name for your lab instance in the text field
+   - **Definition Type**: Choose from the dropdown:
      - 📁 **File**: Path to a local `.ps1` definition file
      - 🌐 **URL**: Link to a hosted definition file (e.g., GitHub, web server)
+   - **Definition Location**: Enter the file path or URL in the text field
 
-3. **Add Parameters** (Optional):
-   - Many definitions accept parameters to customize behavior
-   - Add key-value pairs for any parameters your definition requires
-   - Examples: Domain names, VM counts, software versions
-   - Currently supports string data types
+4. **Manage Parameters** (Optional):
+   The interface provides a split-view parameter management system:
+   
+   **Left Panel - Add Parameters**:
+   - Enter parameter name and value in the provided fields
+   - Click "Add Parameter" to save the parameter
+   - The system prevents duplicate parameter names and updates existing ones
+   - Visual feedback confirms when parameters are added or updated
+   
+   **Right Panel - Current Parameters**:
+   - View all added parameters in a clean table format
+   - See parameter names and their values at a glance
+   - Remove individual parameters using the trash icon
+   - Empty state message when no parameters are configured
 
-4. **Create Configuration**: Click `Create Lab Configuration` to save
+5. **Create Configuration**: Click `Create Configuration` to save your lab configuration
+
+### UI Features
+
+- **Visual Feedback**: Toast notifications provide immediate feedback for all actions
+- **Input Validation**: Required fields are validated before submission
+- **Real-time Updates**: Parameter table updates immediately when parameters are added/removed
+- **Responsive Design**: Layout adapts to different screen sizes
+- **Clear Organization**: Logical grouping of related functions with visual hierarchy
 
 ### What Happens Next
 

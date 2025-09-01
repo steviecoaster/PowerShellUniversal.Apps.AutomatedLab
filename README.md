@@ -16,8 +16,8 @@ Once you have an AutomatedLab script, you use this thing to manage the lab, and 
 
 - Any supported version of Windows with the Hyper-V role enabled
 - PowerShell 7+
-- [AutomatedLab module (5.58.0+](https://github.com/AutomatedLab/AutomatedLab)
-- [AutomatedLab.Utils module (v1.6.0+)](https://github.com/steviecoaster/automatedlab.utils)
+- [AutomatedLab (5.58.0+)](https://github.com/AutomatedLab/AutomatedLab/releases/latest): **❗ Install from MSI!**
+- [AutomatedLab.Utils module (v1.8.0+)](https://github.com/steviecoaster/automatedlab.utils)
 - [Configuration module (v1.6.0+)](https://github.com/PoshCode/Configuration)
 - [PowerShell Universal 5.0+](https://powershelluniversal.com) - the unlicensed version is fine!
 
@@ -29,7 +29,7 @@ You can install this module from the PowerShell Gallery directly inside PowerShe
 
 ### Manual Installation
 
-***BEFORE YOU BEGIN***
+**_BEFORE YOU BEGIN_**
 
 _Ensure you have the necessary pre-requisites installed before continuing_
 
@@ -53,6 +53,7 @@ Once installed, navigate to `/automatedlab` in your PowerShell Universal instanc
 - **New Lab Configuration**: Create new AutomatedLab environments. See [docs/Configurations.md](docs/Configurations.md)
 - **Manage ISOs**: Upload and manage ISO files. See [docs/ISO.md](docs/ISO.md)
 - **Custom Roles**: Create and configure custom machine roles. See [docs/Roles.md](docs/Roles.md)
+- **Create A Lab**: Lab creation wizard to quickly build labs with one or many vms. See [docs/Definitions.md](docs/Definitions.md)
 
 ## Configuration
 
