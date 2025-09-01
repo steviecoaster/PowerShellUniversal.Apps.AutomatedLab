@@ -307,6 +307,93 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
                             } -Spacing 2
                         } -Style @{ 'margin-bottom' = '16px' }
 
+                        # Custom Roles Assignment Card
+                        New-UDCard -Title "Custom Roles (Optional)" -Content {
+                            New-UDGrid -Container -Content {
+                                New-UDGrid -Item -ExtraSmallSize 12 -Content {
+                                    New-UDAlert -Severity info -Text "Assign custom roles to this VM. Roles will be applied after the VM is created."
+                                } -Style @{ 'margin-bottom' = '16px' }
+                                
+                                # Role Selection Row
+                                New-UDGrid -Item -ExtraSmallSize 12 -SmallSize 8 -Content {
+                                    New-UDDynamic -Id "RoleSelect" -Content {
+                                        try {
+                                            $availableRoles = Get-CustomRole
+                                            if ($availableRoles -and $availableRoles.Count -gt 0) {
+                                                New-UDSelect -Id "VMRole" -Label "Available Custom Roles" -FullWidth -Option {
+                                                    foreach ($role in $availableRoles) {
+                                                        New-UDSelectOption -Name $role -Value $role
+                                                    }
+                                                }
+                                            }
+                                            else {
+                                                New-UDSelect -Id "VMRole" -Label "Available Custom Roles" -FullWidth -Option {
+                                                    New-UDSelectOption -Name "No custom roles available" -Value "" -Disabled
+                                                }
+                                            }
+                                        }
+                                        catch {
+                                            New-UDSelect -Id "VMRole" -Label "Available Custom Roles" -FullWidth -Option {
+                                                New-UDSelectOption -Name "Error loading roles" -Value "" -Disabled
+                                            }
+                                        }
+                                    }
+                                } -Style @{ 'margin-bottom' = '16px'; 'padding' = '0 8px' }
+                                New-UDGrid -Item -ExtraSmallSize 12 -SmallSize 4 -Content {
+                                    New-UDButton -Text "Add Role" -Color secondary -FullWidth -OnClick {
+                                        $selectedRole = (Get-UDElement -Id "VMRole").value
+                                        
+                                        if ($selectedRole) {
+                                            # Initialize session variable for current VM roles if it doesn't exist
+                                            if (-not $Session:CurrentVMRoles) { $Session:CurrentVMRoles = @() }
+                                            
+                                            # Check if role is already added
+                                            if ($Session:CurrentVMRoles -contains $selectedRole) {
+                                                Show-UDToast -Message "Role '$selectedRole' is already assigned to this VM"
+                                                return
+                                            }
+                                            
+                                            $Session:CurrentVMRoles = @($Session:CurrentVMRoles) + $selectedRole
+                                            Sync-UDElement -Id "VMRoleList"
+                                        }
+                                        else {
+                                            Show-UDToast -Message "Please select a role to add"
+                                        }
+                                    } -Icon (New-UDIcon -Icon plus)
+                                } -Style @{ 'margin-bottom' = '16px'; 'padding' = '0 8px' }
+                                
+                                # Current VM Roles Display
+                                New-UDGrid -Item -ExtraSmallSize 12 -Content {
+                                    New-UDDynamic -Id "VMRoleList" -Content {
+                                        if ($Session:CurrentVMRoles -and $Session:CurrentVMRoles.Count -gt 0) {
+                                            New-UDCard -Content {
+                                                New-UDTypography -Text "Assigned Roles for Current VM:" -Variant subtitle2 -Style @{ 'margin-bottom' = '8px' }
+                                                New-UDTable -Data ($Session:CurrentVMRoles | ForEach-Object { 
+                                                    [PSCustomObject]@{ 
+                                                        RoleName = $_ 
+                                                    } 
+                                                }) -Columns @(
+                                                    New-UDTableColumn -Property "RoleName" -Title "Role Name"
+                                                    New-UDTableColumn -Property Actions -Title "Actions" -Render {
+                                                        New-UDStack -Direction row -Spacing 1 -Content {
+                                                            New-UDButton -Text "Remove" -Size small -Color error -OnClick {
+                                                                $roleToRemove = $EventData.RoleName
+                                                                $Session:CurrentVMRoles = $Session:CurrentVMRoles | Where-Object { $_ -ne $roleToRemove }
+                                                                Sync-UDElement -Id "VMRoleList"
+                                                            } -Icon (New-UDIcon -Icon trash)
+                                                        }
+                                                    }
+                                                ) -Dense -Size small
+                                            } -Style @{ 'background-color' = 'rgba(33, 150, 243, 0.05)'; 'border' = '1px solid rgba(33, 150, 243, 0.2)' }
+                                        }
+                                        else {
+                                            New-UDAlert -Severity info -Text "No custom roles assigned. Roles are optional and can be added after VM creation."
+                                        }
+                                    }
+                                } -Style @{ 'margin-top' = '16px' }
+                            } -Spacing 2
+                        } -Style @{ 'margin-bottom' = '16px' }
+
                         # Network Configuration Card
                         New-UDDynamic -Id "VMNetworkSelect" -Content {
                             $networkCount = ($Session:Networks | Measure-Object).Count
@@ -515,6 +602,7 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
                                                 RAM             = $sizeSpecs.RAM
                                                 OS              = $vmOS
                                                 NetworkAdapters = $Session:CurrentVMNICs
+                                                CustomRoles     = if ($Session:CurrentVMRoles) { $Session:CurrentVMRoles } else { @() }
                                             }
                                 
                                             if (-not $Session:VMs) { $Session:VMs = @() }
@@ -527,7 +615,9 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
                                             Set-UDElement -Id "CustomRAM" -Properties @{ value = "" }
                                             Set-UDElement -Id "CustomVMSpecs" -Properties @{ style = @{ display = "none" } }
                                             $Session:CurrentVMNICs = @()
+                                            $Session:CurrentVMRoles = @()
                                             Sync-UDElement -Id "VMNICList"
+                                            Sync-UDElement -Id "VMRoleList"
                                         }
                                         else {
                                             Show-UDToast -Message "Please fill in VM Name, Size, and Operating System"
@@ -566,6 +656,19 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
                                             }
                                             else {
                                                 New-UDTypography -Text "None" -Variant caption -Style @{ 'color' = 'red' }
+                                            }
+                                        }
+                                        New-UDTableColumn -Property "CustomRoles" -Title "Custom Roles" -Render {
+                                            if ($EventData.CustomRoles -and $EventData.CustomRoles.Count -gt 0) {
+                                                $roleCount = ($EventData.CustomRoles | Measure-Object).Count
+                                                $rolesText = $EventData.CustomRoles -join ", "
+                                                New-UDStack -Direction column -Content {
+                                                    New-UDTypography -Text "$roleCount role(s)" -Variant caption -Style @{ 'font-weight' = 'bold'; 'color' = '#1976d2' }
+                                                    New-UDTypography -Text $rolesText -Variant caption -Style @{ 'font-size' = '0.75rem'; 'opacity' = '0.8' }
+                                                }
+                                            }
+                                            else {
+                                                New-UDTypography -Text "None" -Variant caption -Style @{ 'opacity' = '0.6' }
                                             }
                                         }
                                         New-UDTableColumn -Property Actions -Title "Actions" -Render {
