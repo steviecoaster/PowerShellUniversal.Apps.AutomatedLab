@@ -11,16 +11,17 @@
             New-UDTypography -Variant h6 -Text "Web based lab management" -Align "center"
         }
     }
+    
+    # Row 1: Lab Creation Wizard, New Lab Configuration
     New-UDRow -Columns {
         New-UDColumn -SmallSize 12 -MediumSize 6 -LargeSize 4 -Content {
-            New-UDCard -Title "Manage Labs" -Content {
+            New-UDCard -Title "Lab Creation Wizard" -Content {
                 New-UDStack -Direction row -Spacing 2 -Content {
-                    New-UDIcon -Icon server -Size lg
-                    New-UDTypography -Text "Lab Management" -Variant body1
+                    New-UDIcon -Icon 'magic' -Size lg
+                    New-UDTypography -Text "Build Complete Labs" -Variant body1
                 }
-                New-UDButton -Text "Open Lab Manager" -Color primary -OnClick {
-                    # Add your VM management logic here
-                    Invoke-UDRedirect -Url '/Manage-Labs'
+                New-UDButton -Text "Launch Wizard" -Color primary -OnClick {
+                    Invoke-UDRedirect -Url '/Create-Lab'
                 }
             } -Style @{
                 'text-align' = 'center'
@@ -44,16 +45,16 @@
         }
     }
 
+    # Row 2: Manage Labs, Custom Role
     New-UDRow -Columns {
         New-UDColumn -SmallSize 12 -MediumSize 6 -LargeSize 4 -Content {
-            New-UDCard -Title "Manage ISOs" -Content {
+            New-UDCard -Title "Manage Labs" -Content {
                 New-UDStack -Direction row -Spacing 2 -Content {
-                    New-UDIcon -Icon 'compact-disc' -Size lg
-                    New-UDTypography -Text "ISO Management" -Variant body1
+                    New-UDIcon -Icon server -Size lg
+                    New-UDTypography -Text "Lab Management" -Variant body1
                 }
-                New-UDButton -Text "Open ISO Manager" -Color primary -OnClick {
-                    # Add your VM management logic here
-                    Invoke-UDRedirect -Url '/Manage-Isos'
+                New-UDButton -Text "Open Lab Manager" -Color primary -OnClick {
+                    Invoke-UDRedirect -Url '/Manage-Labs'
                 }
             } -Style @{
                 'text-align' = 'center'
@@ -68,7 +69,6 @@
                     New-UDTypography -Text "Roles" -Variant body1
                 }
                 New-UDButton -Text "Open Role Management" -Color primary -OnClick {
-                    # Add your VM management logic here
                     Invoke-UDRedirect -Url '/Custom-Roles'
                 }
             } -Style @{
@@ -78,15 +78,16 @@
         }
     }
 
+    # Row 3: Manage ISOs (single card)
     New-UDRow -Columns {
         New-UDColumn -SmallSize 12 -MediumSize 6 -LargeSize 4 -Content {
-            New-UDCard -Title "Lab Creation Wizard" -Content {
+            New-UDCard -Title "Manage ISOs" -Content {
                 New-UDStack -Direction row -Spacing 2 -Content {
-                    New-UDIcon -Icon 'magic' -Size lg
-                    New-UDTypography -Text "Build Complete Labs" -Variant body1
+                    New-UDIcon -Icon 'compact-disc' -Size lg
+                    New-UDTypography -Text "ISO Management" -Variant body1
                 }
-                New-UDButton -Text "Launch Wizard" -Color primary -OnClick {
-                    Invoke-UDRedirect -Url '/Create-Lab'
+                New-UDButton -Text "Open ISO Manager" -Color primary -OnClick {
+                    Invoke-UDRedirect -Url '/Manage-Isos'
                 }
             } -Style @{
                 'text-align' = 'center'
