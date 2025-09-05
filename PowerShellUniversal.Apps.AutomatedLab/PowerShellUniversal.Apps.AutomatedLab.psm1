@@ -291,8 +291,13 @@ New-LabDefinition -Name '$($LabData.LabName)' -DefaultVirtualizationEngine Hyper
 
         # Add VMs
         foreach ($vm in $LabData.VMs) {
-            $script += "Add-LabMachineDefinition -Name '$($vm.Name)' -OperatingSystem '$($vm.OS)' -Memory $($vm.RAM)GB -Processors $($vm.CPU)"
-        
+            if($vm.BuiltInRoles -and $vm.BuiltInRoles.Count -gt 0) {
+                $roles = ($vm.BuiltInRoles | ForEach-Object { "'$_'" }) -join ','
+                $script += "Add-LabMachineDefinition -Name '$($vm.Name)' -OperatingSystem '$($vm.OS)' -Memory $($vm.RAM)GB -Processors $($vm.CPU) -Roles @($roles)"
+            } else {
+                $script += "Add-LabMachineDefinition -Name '$($vm.Name)' -OperatingSystem '$($vm.OS)' -Memory $($vm.RAM)GB -Processors $($vm.CPU)"
+            }
+
             if ($vm.NetworkAdapters -and $vm.NetworkAdapters.Count -gt 0) {
                 $adapters = $vm.NetworkAdapters | ForEach-Object {
                     $adapterDef = "New-LabNetworkAdapterDefinition -VirtualSwitch '$($_.VirtualSwitch)'"
