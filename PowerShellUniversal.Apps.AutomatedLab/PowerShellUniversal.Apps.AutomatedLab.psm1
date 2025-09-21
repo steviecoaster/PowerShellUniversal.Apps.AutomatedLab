@@ -270,14 +270,14 @@ New-LabDefinition -Name '$($LabData.LabName)' -DefaultVirtualizationEngine Hyper
                 'DefaultSwitch' {
                     $script += "Add-LabVirtualNetworkDefinition -Name 'Default Switch'`n"
                 }
-                'Internal' {
+                "Internal" {
                     $script += "Add-LabVirtualNetworkDefinition -Name '$($network.Name)' -AddressSpace '$($network.Subnet)'"
                     if ($network.Gateway) {
                         $script += " -HyperVProperties @{ SwitchType = 'Internal' }"
                     }
                     $script += "`n"
                 }
-                'External' {
+                "External" {
                     $script += "Add-LabVirtualNetworkDefinition -Name '$($network.Name)' -HyperVProperties @{ SwitchType = 'External'; AdapterName = '$($network.PhysicalAdapter)' }`n"
                 }
             }
@@ -322,7 +322,7 @@ New-LabDefinition -Name '$($LabData.LabName)' -DefaultVirtualizationEngine Hyper
                         # Static IP configuration - don't add UseDhcp parameter as it defaults to false when IpAddress is specified
                     } else {
                         # DHCP configuration
-                        $adapterDef += ' -UseDhcp'
+                        $adapterDef += " -UseDhcp"
                     }
                     $adapterDef
                 }
@@ -436,4 +436,4 @@ function Stop-SingleVM {
 }
 
 
-New-PSUScript -Module 'PowerShellUniversal.Apps.AutomatedLab' -Command 'Start-Lab' -Environment 'PowerShell 7'
+New-PSUScript -Module "PowerShellUniversal.Apps.AutomatedLab" -Command "Start-Lab" -Environment "PowerShell 7"

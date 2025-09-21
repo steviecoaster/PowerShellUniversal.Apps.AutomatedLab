@@ -25,28 +25,28 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
     $Session:BuiltInRoleMandatoryParameterValues = New-Object -TypeName 'System.Collections.Generic.List[System.Object]'
 
     New-UDContainer -Content {
-        New-UDTypography -Text 'AutomatedLab Creation Wizard' -Variant h3 -Align center
+        New-UDTypography -Text "AutomatedLab Creation Wizard" -Variant "h3" -Align "center"
         New-UDDivider
 
         # Loading component while fetching OS and network adapter data
         New-UDDynamic -Id 'MainContent' -Content {
             if ((-not $Session:OSLoaded -and -not $Session:OSLoadError) -or -not $Session:AdaptersLoaded) {
                 New-UDCard -Content {
-                    New-UDStack -Direction column -AlignItems center -Spacing 3 -Content {
-                        New-UDProgress -Circular -Color primary -Size medium
-                        New-UDTypography -Text 'Loading lab configuration data...' -Variant h6 -Align center
-                        New-UDTypography -Text 'Please wait while we fetch available operating systems and network adapters.' -Variant body2 -Align center -Style @{ 'opacity' = '0.7' }
+                    New-UDStack -Direction "column" -AlignItems center -Spacing 3 -Content {
+                        New-UDProgress -Circular -Color "primary" -Size "medium"
+                        New-UDTypography -Text "Loading lab configuration data..." -Variant "h6" -Align "center"
+                        New-UDTypography -Text "Please wait while we fetch available operating systems and network adapters." -Variant "body2" -Align "center" -Style @{ 'opacity' = '0.7' }
                     }
                 } -Style @{ 'padding' = '40px'; 'text-align' = 'center' }
             } elseif ($Session:OSLoadError -and (-not $Session:AvailableOS -or $Session:AvailableOS.Count -eq 0)) {
                 # Show error message when no OS are available
                 New-UDCard -Content {
-                    New-UDStack -Direction column -AlignItems center -Spacing 3 -Content {
-                        New-UDIcon -Icon exclamationTriangle -Size '2x' -Color warning
-                        New-UDTypography -Text 'No Operating Systems Available' -Variant h5 -Align center
-                        New-UDTypography -Text 'No ISO files were found in your AutomatedLab ISO directory.' -Variant body1 -Align center
-                        New-UDTypography -Text 'Please add ISO files to your ISO directory before creating lab definitions.' -Variant body2 -Align center -Style @{ 'opacity' = '0.8' }
-                        New-UDButton -Text 'Open ISO Management' -Color primary -OnClick {
+                    New-UDStack -Direction "column" -AlignItems center -Spacing 3 -Content {
+                        New-UDIcon -Icon exclamationTriangle -Size "2x" -Color "warning"
+                        New-UDTypography -Text "No Operating Systems Available" -Variant "h5" -Align "center"
+                        New-UDTypography -Text "No ISO files were found in your AutomatedLab ISO directory." -Variant "body1" -Align "center"
+                        New-UDTypography -Text "Please add ISO files to your ISO directory before creating lab definitions." -Variant "body2" -Align "center" -Style @{ 'opacity' = '0.8' }
+                        New-UDButton -Text "Open ISO Management" -Color "primary" -OnClick {
                             # Navigate to ISO management page if available
                             Show-UDToast -Message 'Please use the ISO Management page to add operating system ISO files.'
                         }
@@ -59,7 +59,7 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
 
                     # Step 1: Lab Information
                     New-UDStep -OnLoad {
-                        New-UDCard -Title 'Lab Configuration' -Content {
+                        New-UDCard -Title "Lab Configuration" -Content {
                             New-UDGrid -Container -Content {
                                 New-UDGrid -Item -ExtraSmallSize 12 -Content {
                                     New-UDTextbox -Id 'LabName' -Label 'Lab Name' -Placeholder "Enter lab name (e.g., 'Active Directory Lab')" -FullWidth -Value $Session:LabName -OnChange {
@@ -72,18 +72,18 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
                                     }
                                 }
                                 New-UDGrid -Item -ExtraSmallSize 12 -Content {
-                                    New-UDAlert -Severity info -Text 'Start by giving your lab a name and description. This helps identify the purpose and scope of your lab environment.'
+                                    New-UDAlert -Severity "info" -Text "Start by giving your lab a name and description. This helps identify the purpose and scope of your lab environment."
                                 }
                             }
                         }
-                    } -Label 'Lab Info'
+                    } -Label "Lab Info"
 
                     # Step 2: Virtual Switch Configuration
                     New-UDStep -OnLoad {
-                        New-UDCard -Title 'Virtual Switch Configuration' -Content {
+                        New-UDCard -Title "Virtual Switch Configuration" -Content {
                             New-UDGrid -Container -Content {
                                 New-UDGrid -Item -ExtraSmallSize 12 -Content {
-                                    New-UDAlert -Severity info -Text 'Configure virtual switches (networks) for your lab. AutomatedLab supports Internal, External, and Default Switch configurations.'
+                                    New-UDAlert -Severity "info" -Text "Configure virtual switches (networks) for your lab. AutomatedLab supports Internal, External, and Default Switch configurations."
                                 }
 
                                 New-UDGrid -Item -ExtraSmallSize 12 -SmallSize 4 -Content {
@@ -109,7 +109,7 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
                                     }
                                 }
                                 New-UDGrid -Item -ExtraSmallSize 12 -SmallSize 4 -Content {
-                                    New-UDButton -Text 'Add Virtual Switch' -Color primary -OnClick {
+                                    New-UDButton -Text "Add Virtual Switch" -Color "primary" -OnClick {
                                         $networkName = (Get-UDElement -Id 'NetworkName').value
                                         $switchType = (Get-UDElement -Id 'NetworkSwitchType').value
 
@@ -204,8 +204,8 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
                             if ($Session:Networks -and $networkCount -gt 0) {
                                 New-UDCard -Title "Defined Virtual Switches ($networkCount)" -Content {
                                     New-UDTable -Data $Session:Networks -Columns @(
-                                        New-UDTableColumn -Property 'Name' -Title 'Switch Name'
-                                        New-UDTableColumn -Property 'SwitchType' -Title 'Type' -Render {
+                                        New-UDTableColumn -Property 'Name' -Title "Switch Name"
+                                        New-UDTableColumn -Property 'SwitchType' -Title "Type" -Render {
                                             switch ($EventData.SwitchType) {
                                                 'DefaultSwitch' { 'Default Switch' }
                                                 'Internal' { 'Internal' }
@@ -213,10 +213,10 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
                                                 default { $EventData.SwitchType }
                                             }
                                         }
-                                        New-UDTableColumn -Property 'Subnet' -Title 'Address Space/Network'
-                                        New-UDTableColumn -Property Actions -Title 'Actions' -Render {
-                                            New-UDStack -Direction row -Spacing 1 -Content {
-                                                New-UDButton -Text 'Remove' -Size small -OnClick {
+                                        New-UDTableColumn -Property 'Subnet' -Title "Address Space/Network"
+                                        New-UDTableColumn -Property Actions -Title "Actions" -Render {
+                                            New-UDStack -Direction "row" -Spacing 1 -Content {
+                                                New-UDButton -Text "Remove" -Size "small" -OnClick {
                                                     $selectedNetwork = $EventData.Name
                                                     # Properly remove from List object
                                                     $itemToRemove = $Session:Networks | Where-Object { $_.Name -eq $selectedNetwork }
@@ -224,17 +224,17 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
                                                         $Session:Networks.Remove($itemToRemove)
                                                     }
                                                     Sync-UDElement -Id 'NetworkList'
-                                                } -Color error -Icon (New-UDIcon -Icon trash)
+                                                } -Color error -Icon (New-UDIcon -Icon "trash")
                                             }
 
                                         }
                                     )
                                 }
                             } else {
-                                New-UDAlert -Severity info -Text 'Define at least one virtual switch for your lab environment.'
+                                New-UDAlert -Severity "info" -Text "Define at least one virtual switch for your lab environment."
                             }
                         }
-                    } -Label 'Virtual Switches'
+                    } -Label "Virtual Switches"
 
                     # Step 3: Virtual Machine Configuration
                     New-UDStep -OnLoad {
@@ -242,7 +242,7 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
                         New-UDCard -Title 'Basic VM Information' -Content {
                             New-UDGrid -Container -Content {
                                 New-UDGrid -Item -ExtraSmallSize 12 -Content {
-                                    New-UDAlert -Severity info -Text 'Configure the basic properties for your virtual machine.'
+                                    New-UDAlert -Severity "info" -Text "Configure the basic properties for your virtual machine."
                                 } -Style @{ 'margin-bottom' = '16px' }
                                 New-UDGrid -Item -ExtraSmallSize 12 -SmallSize 4 -Content {
                                     New-UDTextbox -Id 'VMName' -Label 'VM Name' -Placeholder 'e.g., DC01, WEB01, CLIENT01' -FullWidth
@@ -271,7 +271,7 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
                                             }
                                         } elseif ($Session:OSLoadError) {
                                             # Show error message when no OS are available
-                                            New-UDAlert -Severity error -Text 'No operating systems available. Please add ISO files to your AutomatedLab ISO directory before creating VMs.'
+                                            New-UDAlert -Severity "error" -Text 'No operating systems available. Please add ISO files to your AutomatedLab ISO directory before creating VMs.'
                                         } else {
                                             # Still loading
                                             New-UDSelect -Id 'VMOS' -Label 'Operating System' -FullWidth -Option {
@@ -284,13 +284,13 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
                                 # Custom VM Specifications (conditionally shown)
                                 New-UDGrid -Item -ExtraSmallSize 12 -Id 'CustomVMSpecs' -Content {
                                     New-UDCard -Content {
-                                        New-UDTypography -Text 'Custom VM Specifications' -Variant subtitle2 -Style @{ 'margin-bottom' = '12px' }
+                                        New-UDTypography -Text "Custom VM Specifications" -Variant "subtitle2" -Style @{ 'margin-bottom' = '12px' }
                                         New-UDGrid -Container -Content {
                                             New-UDGrid -Item -ExtraSmallSize 12 -SmallSize 6 -Content {
-                                                New-UDTextbox -Id 'CustomCPU' -Label 'CPU Cores' -Placeholder 'e.g., 4' -FullWidth -Type number
+                                                New-UDTextbox -Id 'CustomCPU' -Label 'CPU Cores' -Placeholder 'e.g., 4' -FullWidth -Type "number"
                                             } -Style @{ 'margin-bottom' = '16px'; 'padding' = '0 8px' }
                                             New-UDGrid -Item -ExtraSmallSize 12 -SmallSize 6 -Content {
-                                                New-UDTextbox -Id 'CustomRAM' -Label 'RAM (GB)' -Placeholder 'e.g., 8' -FullWidth -Type number
+                                                New-UDTextbox -Id 'CustomRAM' -Label 'RAM (GB)' -Placeholder 'e.g., 8' -FullWidth -Type "number"
                                             } -Style @{ 'margin-bottom' = '16px'; 'padding' = '0 8px' }
                                         } -Spacing 2
                                     } -Style @{ 'background-color' = 'rgba(0, 123, 255, 0.05)'; 'border' = '1px solid rgba(0, 123, 255, 0.2)' }
@@ -302,7 +302,7 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
                         New-UDCard -Title 'Built-In Roles (Optional)' -Content {
                             New-UDGrid -Container -Content {
                                 New-UDGrid -Item -ExtraSmallSize 12 -Content {
-                                    New-UDAlert -Severity info -Text 'Assign built-in roles to this VM. Roles will be applied after the VM is created.'
+                                    New-UDAlert -Severity "info" -Text "Assign built-in roles to this VM. Roles will be applied after the VM is created."
                                 } -Style @{ 'margin-bottom' = '16px' }
 
                                 # Role Selection Row
@@ -339,8 +339,8 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
                                     }
                                 } -Style @{ 'margin-bottom' = '16px'; 'padding' = '0 8px' }
                                 New-UDGrid -Item -ExtraSmallSize 12 -SmallSize 4 -Content {
-                                    New-UDStack -Direction column -Content {
-                                        New-UDButton -Text 'Add Role Parameters' -Id 'AddRoleParametersButton' -Color secondary -FullWidth -OnClick {
+                                    New-UDStack -Direction "column" -Content {
+                                        New-UDButton -Text "Add Role Parameters" -Id 'AddRoleParametersButton' -Color secondary -FullWidth -OnClick {
                                             $selectedRole = (Get-UDElement -Id 'BuiltInVMRole').value
                                             $ValidProperties = $Session:BuiltInRoleParameters.ValidRoleProperties["$selectedRole"]
                                             $MandatoryParams = $Session:BuiltInRoleParameters.MandatoryRoleProperties["$selectedRole"]
@@ -404,7 +404,7 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
                                                                 }
                                                                 New-UDGrid -Item -ExtraSmallSize 12 -SmallSize 6 -Content {
                                                                     if ($param.Contains('Password') -or $param.Contains('password')) {
-                                                                        New-UDTextbox -Id "Param_$param" -Label "$param" -Placeholder "Enter value for $param" -FullWidth -Type password -Value $existingValue
+                                                                        New-UDTextbox -Id "Param_$param" -Label "$param" -Placeholder "Enter value for $param" -FullWidth -Type "password" -Value $existingValue
                                                                     } else {
                                                                         New-UDTextbox -Id "Param_$param" -Label "$param" -Placeholder "Enter value for $param" -FullWidth -Value $existingValue
                                                                     }
@@ -413,7 +413,7 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
                                                         } -Spacing 2
                                                     }
                                                 } -Persistent -Footer {
-                                                    New-UDButton -Text 'Save & Close' -Color default -OnClick {
+                                                    New-UDButton -Text "Save & Close" -Color default -OnClick {
                                                         # Clear existing parameter values to prevent duplicates
                                                         $Session:BuiltInRoleOptionalParameterValues = New-Object -TypeName 'System.Collections.Generic.List[System.Object]'
                                                         $Session:BuiltInRoleMandatoryParameterValues = New-Object -TypeName 'System.Collections.Generic.List[System.Object]'
@@ -444,14 +444,14 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
                                                             }
                                                         }
                                                         Hide-UDModal
-                                                    } -Icon (New-UDIcon -Icon times)
+                                                    } -Icon (New-UDIcon -Icon "times")
                                                 }
                                             } else {
                                                 Show-UDToast -Message "No parameters available for role '$selectedRole'"
                                             }
-                                        } -Icon (New-UDIcon -Icon plus) -Disabled
+                                        } -Icon (New-UDIcon -Icon "plus") -Disabled
 
-                                        New-UDButton -Text 'Add Role' -Color secondary -FullWidth -OnClick {
+                                        New-UDButton -Text "Add Role" -Color secondary -FullWidth -OnClick {
                                             $selectedRole = (Get-UDElement -Id 'BuiltInVMRole').value
                                             if ($selectedRole) {
                                                 # Initialize session variable for current VM roles if it doesn't exist
@@ -487,7 +487,7 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
                                             } else {
                                                 Show-UDToast -Message 'Please select a role to add'
                                             }
-                                        } -Icon (New-UDIcon -Icon plus)
+                                        } -Icon (New-UDIcon -Icon "plus")
                                     }
                                 } -Style @{ 'margin-bottom' = '16px'; 'padding' = '0 8px' }
 
@@ -496,14 +496,14 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
                                     New-UDDynamic -Id 'BuiltInVMRoleList' -Content {
                                         if ($Session:CurrentBuiltInVMRoles -and $Session:CurrentBuiltInVMRoles.Count -gt 0) {
                                             New-UDCard -Content {
-                                                New-UDTypography -Text 'Assigned Roles for Current VM:' -Variant subtitle2 -Style @{ 'margin-bottom' = '8px' }
+                                                New-UDTypography -Text "Assigned Roles for Current VM:" -Variant "subtitle2" -Style @{ 'margin-bottom' = '8px' }
                                                 New-UDTable -Data $Session:CurrentBuiltInVMRoles -Columns @(
-                                                    New-UDTableColumn -Property 'RoleName' -Title 'Role Name'
-                                                    New-UDTableColumn -Property 'MandatoryParameters' -Title 'Mandatory Parameters' -Render {
+                                                    New-UDTableColumn -Property 'RoleName' -Title "Role Name"
+                                                    New-UDTableColumn -Property 'MandatoryParameters' -Title "Mandatory Parameters" -Render {
                                                         if ($EventData.MandatoryParameters -and $EventData.MandatoryParameters.Count -gt 0) {
                                                             $MandatoryParameterCount = $EventData.MandatoryParameters.Count
-                                                            New-UDStack -Direction column -Content {
-                                                                New-UDTypography -Text "$MandatoryParameterCount mandatory parameter(s)" -Variant caption -Style @{ 'font-weight' = 'bold'; 'color' = '#1976d2' }
+                                                            New-UDStack -Direction "column" -Content {
+                                                                New-UDTypography -Text "$MandatoryParameterCount mandatory parameter(s)" -Variant "caption" -Style @{ 'font-weight' = 'bold'; 'color' = '#1976d2' }
                                                                 $EventData.MandatoryParameters |
                                                                 ForEach-Object {
                                                                     $s = [string]::Concat("$($_.Name): $($_.Value)", [Environment]::NewLine)
@@ -512,15 +512,15 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
                                                             }
                                                         } else {
                                                             $MandatoryParameterCount = $EventData.MandatoryParameters.Count
-                                                            New-UDTypography -Text "$MandatoryParameterCount mandatory parameter(s)" -Variant caption -Style @{ 'font-weight' = 'bold'; 'color' = '#1976d2' }
+                                                            New-UDTypography -Text "$MandatoryParameterCount mandatory parameter(s)" -Variant "caption" -Style @{ 'font-weight' = 'bold'; 'color' = '#1976d2' }
                                                         }
                                                     }
-                                                    New-UDTableColumn -Property 'OptionalParameters' -Title 'Optional Parameters' -Render {
+                                                    New-UDTableColumn -Property 'OptionalParameters' -Title "Optional Parameters" -Render {
                                                         if ($EventData.OptionalParameters -and $EventData.OptionalParameters.Count -gt 0) {
                                                             # show only parameters that have a value
                                                             $OptionalParameterCount = $EventData.OptionalParameters.Count
-                                                            New-UDStack -Direction column -Content {
-                                                                New-UDTypography -Text "$OptionalParameterCount optional parameter(s)" -Variant caption -Style @{ 'font-weight' = 'bold'; 'color' = '#1976d2' }
+                                                            New-UDStack -Direction "column" -Content {
+                                                                New-UDTypography -Text "$OptionalParameterCount optional parameter(s)" -Variant "caption" -Style @{ 'font-weight' = 'bold'; 'color' = '#1976d2' }
                                                                 $EventData.OptionalParameters |
                                                                 ForEach-Object {
                                                                     $s = [string]::Concat("$($_.Name): $($_.Value)", [Environment]::NewLine)
@@ -529,12 +529,12 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
                                                             }
                                                         } else {
                                                             $OptionalParameterCount = $EventData.OptionalParameters.Count
-                                                            New-UDTypography -Text "$OptionalParameterCount optional parameter(s)" -Variant caption -Style @{ 'font-weight' = 'bold'; 'color' = '#1976d2' }
+                                                            New-UDTypography -Text "$OptionalParameterCount optional parameter(s)" -Variant "caption" -Style @{ 'font-weight' = 'bold'; 'color' = '#1976d2' }
                                                         }
                                                     }
-                                                    New-UDTableColumn -Property Actions -Title 'Actions' -Render {
-                                                        New-UDStack -Direction row -Spacing 1 -Content {
-                                                            New-UDButton -Text 'Edit' -Size small -Color primary -OnClick {
+                                                    New-UDTableColumn -Property Actions -Title "Actions" -Render {
+                                                        New-UDStack -Direction "row" -Spacing 1 -Content {
+                                                            New-UDButton -Text "Edit" -Size "small" -Color "primary" -OnClick {
                                                                 $selectedRole = $EventData.RoleName
                                                                 $ValidProperties = $Session:BuiltInRoleParameters.ValidRoleProperties["$selectedRole"]
                                                                 $MandatoryParams = $Session:BuiltInRoleParameters.MandatoryRoleProperties["$selectedRole"]
@@ -586,7 +586,7 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
                                                                                     }
                                                                                     New-UDGrid -Item -ExtraSmallSize 12 -SmallSize 6 -Content {
                                                                                         if ($param.Contains('Password') -or $param.Contains('password')) {
-                                                                                            New-UDTextbox -Id "Param_$param" -Label "$param" -Placeholder "Enter value for $param" -FullWidth -Type password -Value $existingValue
+                                                                                            New-UDTextbox -Id "Param_$param" -Label "$param" -Placeholder "Enter value for $param" -FullWidth -Type "password" -Value $existingValue
                                                                                         } else {
                                                                                             New-UDTextbox -Id "Param_$param" -Label "$param" -Placeholder "Enter value for $param" -FullWidth -Value $existingValue
                                                                                         }
@@ -595,7 +595,7 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
                                                                             } -Spacing 2
                                                                         }
                                                                     } -Persistent -Footer {
-                                                                        New-UDButton -Text 'Save & Close' -Color default -OnClick {
+                                                                        New-UDButton -Text "Save & Close" -Color default -OnClick {
                                                                             # Clear existing parameter values to prevent duplicates
                                                                             $Session:BuiltInRoleOptionalParameterValues = New-Object -TypeName 'System.Collections.Generic.List[System.Object]'
                                                                             $Session:BuiltInRoleMandatoryParameterValues = New-Object -TypeName 'System.Collections.Generic.List[System.Object]'
@@ -645,26 +645,26 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
 
                                                                             Hide-UDModal
                                                                             Sync-UDElement -Id 'BuiltInVMRoleList'
-                                                                        } -Icon (New-UDIcon -Icon save)
+                                                                        } -Icon (New-UDIcon -Icon "save")
                                                                     }
                                                                 } else {
                                                                     Show-UDToast -Message "No parameters available for role '$selectedRole'"
                                                                 }
-                                                            } -Icon (New-UDIcon -Icon edit)
+                                                            } -Icon (New-UDIcon -Icon "edit")
 
-                                                            New-UDButton -Text 'Remove' -Size small -Color error -OnClick {
+                                                            New-UDButton -Text "Remove" -Size "small" -Color error -OnClick {
                                                                 $roleToRemove = $EventData.RoleName
                                                                 $Session:CurrentBuiltInVMRoles = $Session:CurrentBuiltInVMRoles | Where-Object { $_.RoleName -ne $roleToRemove }
                                                                 $Session:BuiltInRoleOptionalParameterValues = New-Object -TypeName 'System.Collections.Generic.List[System.Object]'
                                                                 $Session:BuiltInRoleMandatoryParameters = New-Object -TypeName 'System.Collections.Generic.List[System.Object]'
                                                                 Sync-UDElement -Id 'BuiltInVMRoleList'
-                                                            } -Icon (New-UDIcon -Icon trash)
+                                                            } -Icon (New-UDIcon -Icon "trash")
                                                         }
                                                     }
-                                                ) -Dense -Size small
+                                                ) -Dense -Size "small"
                                             } -Style @{ 'background-color' = 'rgba(33, 150, 243, 0.05)'; 'border' = '1px solid rgba(33, 150, 243, 0.2)' }
                                         } else {
-                                            New-UDAlert -Severity info -Text 'No built-in roles assigned. Roles are optional and can be added after VM creation.'
+                                            New-UDAlert -Severity "info" -Text "No built-in roles assigned. Roles are optional and can be added after VM creation."
                                         }
                                     }
                                 } -Style @{ 'margin-top' = '16px' }
@@ -675,7 +675,7 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
                         New-UDCard -Title 'Custom Roles (Optional)' -Content {
                             New-UDGrid -Container -Content {
                                 New-UDGrid -Item -ExtraSmallSize 12 -Content {
-                                    New-UDAlert -Severity info -Text 'Assign custom roles to this VM. Roles will be applied after the VM is created.'
+                                    New-UDAlert -Severity "info" -Text "Assign custom roles to this VM. Roles will be applied after the VM is created."
                                 } -Style @{ 'margin-bottom' = '16px' }
 
                                 # Role Selection Row
@@ -702,7 +702,7 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
                                     }
                                 } -Style @{ 'margin-bottom' = '16px'; 'padding' = '0 8px' }
                                 New-UDGrid -Item -ExtraSmallSize 12 -SmallSize 4 -Content {
-                                    New-UDButton -Text 'Add Role' -Color secondary -FullWidth -OnClick {
+                                    New-UDButton -Text "Add Role" -Color secondary -FullWidth -OnClick {
                                         $selectedRole = (Get-UDElement -Id 'VMRole').value
 
                                         if ($selectedRole) {
@@ -720,7 +720,7 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
                                         } else {
                                             Show-UDToast -Message 'Please select a role to add'
                                         }
-                                    } -Icon (New-UDIcon -Icon plus)
+                                    } -Icon (New-UDIcon -Icon "plus")
                                 } -Style @{ 'margin-bottom' = '16px'; 'padding' = '0 8px' }
 
                                 # Current VM Roles Display
@@ -728,26 +728,26 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
                                     New-UDDynamic -Id 'VMRoleList' -Content {
                                         if ($Session:CurrentVMRoles -and $Session:CurrentVMRoles.Count -gt 0) {
                                             New-UDCard -Content {
-                                                New-UDTypography -Text 'Assigned Roles for Current VM:' -Variant subtitle2 -Style @{ 'margin-bottom' = '8px' }
+                                                New-UDTypography -Text "Assigned Roles for Current VM:" -Variant "subtitle2" -Style @{ 'margin-bottom' = '8px' }
                                                 New-UDTable -Data ($Session:CurrentVMRoles | ForEach-Object {
                                                         [PSCustomObject]@{
                                                             RoleName = $_
                                                         }
                                                     }) -Columns @(
-                                                    New-UDTableColumn -Property 'RoleName' -Title 'Role Name'
-                                                    New-UDTableColumn -Property Actions -Title 'Actions' -Render {
-                                                        New-UDStack -Direction row -Spacing 1 -Content {
-                                                            New-UDButton -Text 'Remove' -Size small -Color error -OnClick {
+                                                    New-UDTableColumn -Property 'RoleName' -Title "Role Name"
+                                                    New-UDTableColumn -Property Actions -Title "Actions" -Render {
+                                                        New-UDStack -Direction "row" -Spacing 1 -Content {
+                                                            New-UDButton -Text "Remove" -Size "small" -Color error -OnClick {
                                                                 $roleToRemove = $EventData.RoleName
                                                                 $Session:CurrentVMRoles = $Session:CurrentVMRoles | Where-Object { $_ -ne $roleToRemove }
                                                                 Sync-UDElement -Id 'VMRoleList'
-                                                            } -Icon (New-UDIcon -Icon trash)
+                                                            } -Icon (New-UDIcon -Icon "trash")
                                                         }
                                                     }
-                                                ) -Dense -Size small
+                                                ) -Dense -Size "small"
                                             } -Style @{ 'background-color' = 'rgba(33, 150, 243, 0.05)'; 'border' = '1px solid rgba(33, 150, 243, 0.2)' }
                                         } else {
-                                            New-UDAlert -Severity info -Text 'No custom roles assigned. Roles are optional and can be added after VM creation.'
+                                            New-UDAlert -Severity "info" -Text "No custom roles assigned. Roles are optional and can be added after VM creation."
                                         }
                                     }
                                 } -Style @{ 'margin-top' = '16px' }
@@ -761,7 +761,7 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
                                 New-UDCard -Title 'Network Configuration' -Content {
                                     New-UDGrid -Container -Content {
                                         New-UDGrid -Item -ExtraSmallSize 12 -Content {
-                                            New-UDAlert -Severity info -Text 'Configure network adapters to connect this VM to your virtual switches. At least one adapter is required.'
+                                            New-UDAlert -Severity "info" -Text 'Configure network adapters to connect this VM to your virtual switches. At least one adapter is required.'
                                         } -Style @{ 'margin-bottom' = '16px' }
 
                                         # NIC Configuration Row
@@ -785,7 +785,7 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
                                             }
                                         } -Style @{ 'margin-bottom' = '16px'; 'padding' = '0 8px' }
                                         New-UDGrid -Item -ExtraSmallSize 12 -SmallSize 5 -Content {
-                                            New-UDButton -Text 'Add Network Adapter' -Color secondary -FullWidth -OnClick {
+                                            New-UDButton -Text "Add Network Adapter" -Color secondary -FullWidth -OnClick {
                                                 $selectedNetwork = (Get-UDElement -Id 'VMNetwork').value
                                                 $ipAssignment = (Get-UDElement -Id 'NICUseDHCP').value
                                                 $staticIP = (Get-UDElement -Id 'StaticIP').value
@@ -824,13 +824,13 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
                                                 } else {
                                                     Show-UDToast -Message 'Please select a virtual switch'
                                                 }
-                                            } -Icon (New-UDIcon -Icon plus)
+                                            } -Icon (New-UDIcon -Icon "plus")
                                         } -Style @{ 'margin-bottom' = '16px'; 'padding' = '0 8px' }
 
                                         # Static IP Configuration (conditionally shown)
                                         New-UDGrid -Item -ExtraSmallSize 12 -Id 'StaticIPField' -Content {
                                             New-UDCard -Content {
-                                                New-UDTypography -Text 'Static IP Configuration' -Variant subtitle2 -Style @{ 'margin-bottom' = '12px' }
+                                                New-UDTypography -Text 'Static IP Configuration' -Variant "subtitle2" -Style @{ 'margin-bottom' = '12px' }
                                                 New-UDGrid -Container -Content {
                                                     New-UDGrid -Item -ExtraSmallSize 12 -SmallSize 4 -Content {
                                                         New-UDTextbox -Id 'StaticIP' -Label 'IP Address' -Placeholder 'e.g., 192.168.1.100' -FullWidth
@@ -850,7 +850,7 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
                                             New-UDDynamic -Id 'VMNICList' -Content {
                                                 if ($Session:CurrentVMNICs -and $Session:CurrentVMNICs.Count -gt 0) {
                                                     New-UDCard -Content {
-                                                        New-UDTypography -Text 'Network Adapters for Current VM:' -Variant subtitle2 -Style @{ 'margin-bottom' = '8px' }
+                                                        New-UDTypography -Text "Network Adapters for Current VM:" -Variant "subtitle2" -Style @{ 'margin-bottom' = '8px' }
                                                         New-UDTable -Data $Session:CurrentVMNICs -Columns @(
                                                             New-UDTableColumn -Property 'InterfaceName' -Title 'Interface'
                                                             New-UDTableColumn -Property 'VirtualSwitch' -Title 'Virtual Switch'
@@ -869,8 +869,8 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
                                                                     }
                                                                 }
                                                             }
-                                                            New-UDTableColumn -Property Actions -Title 'Actions' -Render {
-                                                                New-UDButton -Text 'Remove' -Size small -Color error -OnClick {
+                                                            New-UDTableColumn -Property Actions -Title "Actions" -Render {
+                                                                New-UDButton -Text "Remove" -Size "small" -Color error -OnClick {
                                                                     $interfaceToRemove = $EventData.InterfaceName
                                                                     $Session:CurrentVMNICs = $Session:CurrentVMNICs | Where-Object { $_.InterfaceName -ne $interfaceToRemove }
                                                                     # Renumber interfaces
@@ -878,19 +878,19 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
                                                                         $Session:CurrentVMNICs[$i].InterfaceName = "Ethernet$($i + 1)"
                                                                     }
                                                                     Sync-UDElement -Id 'VMNICList'
-                                                                } -Icon (New-UDIcon -Icon trash)
+                                                                } -Icon (New-UDIcon -Icon "trash")
                                                             }
-                                                        ) -Dense -Size small
+                                                        ) -Dense -Size "small"
                                                     } -Style @{ 'background-color' = 'rgba(0, 123, 255, 0.05)'; 'border' = '1px solid rgba(0, 123, 255, 0.2)' }
                                                 } else {
-                                                    New-UDAlert -Severity info -Text 'Add network adapters to connect this VM to virtual switches. At least one adapter is required.'
+                                                    New-UDAlert -Severity "info" -Text "Add network adapters to connect this VM to virtual switches. At least one adapter is required."
                                                 }
                                             }
                                         } -Style @{ 'margin-top' = '16px' }
                                     }
                                 } -Style @{ 'margin-bottom' = '16px' }
                             } else {
-                                New-UDAlert -Severity warning -Text 'Please define virtual switches first in the previous step'
+                                New-UDAlert -Severity "warning" -Text "Please define virtual switches first in the previous step"
                             }
                         }
 
@@ -898,7 +898,7 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
                         New-UDCard -Content {
                             New-UDGrid -Container -Content {
                                 New-UDGrid -Item -ExtraSmallSize 12 -Content {
-                                    New-UDButton -Text 'Add Virtual Machine to Lab' -Color primary -Size large -FullWidth -OnClick {
+                                    New-UDButton -Text "Add Virtual Machine to Lab" -Color "primary" -Size "large" -FullWidth -OnClick {
                                         $vmName = (Get-UDElement -Id 'VMName').value
                                         $vmSize = (Get-UDElement -Id 'VMSize').value
                                         $vmOS = (Get-UDElement -Id 'VMOS').value
@@ -979,7 +979,7 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
                                         } else {
                                             Show-UDToast -Message 'Please fill in VM Name, Size, and Operating System'
                                         }
-                                    } -Icon (New-UDIcon -Icon server)
+                                    } -Icon (New-UDIcon -Icon "server")
                                 }
                             }
                         }
@@ -989,12 +989,12 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
                             if ($Session:VMs -and $vmCount -gt 0) {
                                 New-UDCard -Title "Defined Virtual Machines ($vmCount)" -Content {
                                     New-UDTable -Data $Session:VMs -Columns @(
-                                        New-UDTableColumn -Property 'Name' -Title 'VM Name'
-                                        New-UDTableColumn -Property 'Size' -Title 'Size'
-                                        New-UDTableColumn -Property 'CPU' -Title 'CPU Cores'
-                                        New-UDTableColumn -Property 'RAM' -Title 'RAM (GB)'
-                                        New-UDTableColumn -Property 'OS' -Title 'Operating System'
-                                        New-UDTableColumn -Property 'NetworkAdapters' -Title 'Network Adapters' -Render {
+                                        New-UDTableColumn -Property 'Name' -Title "VM Name"
+                                        New-UDTableColumn -Property 'Size' -Title "Size"
+                                        New-UDTableColumn -Property 'CPU' -Title "CPU Cores"
+                                        New-UDTableColumn -Property 'RAM' -Title "RAM (GB)"
+                                        New-UDTableColumn -Property 'OS' -Title "Operating System"
+                                        New-UDTableColumn -Property 'NetworkAdapters' -Title "Network Adapters" -Render {
                                             if ($EventData.NetworkAdapters) {
                                                 $adapterCount = ($EventData.NetworkAdapters | Measure-Object).Count
                                                 if ($adapterCount -gt 0) {
@@ -1002,38 +1002,38 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
                                                         "$($_.InterfaceName): $($_.VirtualSwitch)"
                                                     }
                                                     $adaptersText = $adapters -join ', '
-                                                    New-UDStack -Direction column -Content {
-                                                        New-UDTypography -Text "$adapterCount adapter(s)" -Variant caption -Style @{ 'font-weight' = 'bold' }
-                                                        New-UDTypography -Text $adaptersText -Variant caption -Style @{ 'font-size' = '0.75rem'; 'opacity' = '0.8' }
+                                                    New-UDStack -Direction "column" -Content {
+                                                        New-UDTypography -Text "$adapterCount adapter(s)" -Variant "caption" -Style @{ 'font-weight' = 'bold' }
+                                                        New-UDTypography -Text $adaptersText -Variant "caption" -Style @{ 'font-size' = '0.75rem'; 'opacity' = '0.8' }
                                                     }
                                                 } else {
-                                                    New-UDTypography -Text '0 adapters' -Variant caption -Style @{ 'color' = 'red' }
+                                                    New-UDTypography -Text '0 adapters' -Variant "caption" -Style @{ 'color' = 'red' }
                                                 }
                                             } else {
-                                                New-UDTypography -Text 'None' -Variant caption -Style @{ 'color' = 'red' }
+                                                New-UDTypography -Text 'None' -Variant "caption" -Style @{ 'color' = 'red' }
                                             }
                                         }
-                                        New-UDTableColumn -Property 'BuiltInRoles' -Title 'Built-In Roles' -Render {
+                                        New-UDTableColumn -Property 'BuiltInRoles' -Title "Built-In Roles" -Render {
                                             if ($EventData.BuiltInRoles -and $EventData.BuiltInRoles.Count -gt 0) {
                                                 $roleCount = ($EventData.BuiltInRoles | Measure-Object).Count
                                                 $rolesText = $EventData.BuiltInRoles.RoleName -join ', '
 
-                                                New-UDStack -Direction column -Content {
-                                                    New-UDTypography -Text "$roleCount role(s)" -Variant caption -Style @{ 'font-weight' = 'bold'; 'color' = '#1976d2' }
-                                                    New-UDTypography -Text $rolesText -Variant caption -Style @{ 'font-size' = '0.75rem'; 'opacity' = '0.8' }
+                                                New-UDStack -Direction "column" -Content {
+                                                    New-UDTypography -Text "$roleCount role(s)" -Variant "caption" -Style @{ 'font-weight' = 'bold'; 'color' = '#1976d2' }
+                                                    New-UDTypography -Text $rolesText -Variant "caption" -Style @{ 'font-size' = '0.75rem'; 'opacity' = '0.8' }
 
                                                     # Display parameter details for each role
                                                     foreach ($role in $EventData.BuiltInRoles) {
                                                         if (($role.MandatoryParameters -and $role.MandatoryParameters.Count -gt 0) -or ($role.OptionalParameters -and $role.OptionalParameters.Count -gt 0)) {
                                                             # Shorter header to prevent line breaks
                                                             $roleHeader = if ($role.RoleName.Length -gt 15) { "$($role.RoleName.Substring(0,12))..." } else { $role.RoleName }
-                                                            New-UDTypography -Text "[$roleHeader]" -Variant caption -Style @{ 'font-weight' = 'bold'; 'color' = '#388e3c'; 'margin-top' = '4px'; 'white-space' = 'nowrap'; 'overflow' = 'hidden'; 'text-overflow' = 'ellipsis' }
+                                                            New-UDTypography -Text "[$roleHeader]" -Variant "caption" -Style @{ 'font-weight' = 'bold'; 'color' = '#388e3c'; 'margin-top' = '4px'; 'white-space' = 'nowrap'; 'overflow' = 'hidden'; 'text-overflow' = 'ellipsis' }
 
                                                             # Show mandatory parameters
                                                             if ($role.MandatoryParameters -and $role.MandatoryParameters.Count -gt 0) {
-                                                                New-UDTypography -Text 'Mandatory:' -Variant caption -Style @{ 'font-weight' = 'bold'; 'color' = '#d32f2f'; 'font-size' = '0.7rem' }
+                                                                New-UDTypography -Text 'Mandatory:' -Variant "caption" -Style @{ 'font-weight' = 'bold'; 'color' = '#d32f2f'; 'font-size' = '0.7rem' }
                                                                 foreach ($param in $role.MandatoryParameters) {
-                                                                    New-UDTypography -Text "  $($param.Name): $($param.Value)" -Variant caption -Style @{ 'font-size' = '0.65rem'; 'color' = '#d32f2f'; 'margin-left' = '8px'; 'white-space' = 'nowrap'; 'overflow' = 'hidden'; 'text-overflow' = 'ellipsis' }
+                                                                    New-UDTypography -Text "  $($param.Name): $($param.Value)" -Variant "caption" -Style @{ 'font-size' = '0.65rem'; 'color' = '#d32f2f'; 'margin-left' = '8px'; 'white-space' = 'nowrap'; 'overflow' = 'hidden'; 'text-overflow' = 'ellipsis' }
                                                                 }
                                                             }
 
@@ -1041,9 +1041,9 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
                                                             if ($role.OptionalParameters -and $role.OptionalParameters.Count -gt 0) {
                                                                 $optionalWithValues = $role.OptionalParameters | Where-Object { -not [string]::IsNullOrEmpty($_.Value) }
                                                                 if ($optionalWithValues -and $optionalWithValues.Count -gt 0) {
-                                                                    New-UDTypography -Text 'Optional:' -Variant caption -Style @{ 'font-weight' = 'bold'; 'color' = '#1976d2'; 'font-size' = '0.7rem' }
+                                                                    New-UDTypography -Text 'Optional:' -Variant "caption" -Style @{ 'font-weight' = 'bold'; 'color' = '#1976d2'; 'font-size' = '0.7rem' }
                                                                     foreach ($param in $optionalWithValues) {
-                                                                        New-UDTypography -Text "  $($param.Name): $($param.Value)" -Variant caption -Style @{ 'font-size' = '0.65rem'; 'color' = '#1976d2'; 'margin-left' = '8px'; 'white-space' = 'nowrap'; 'overflow' = 'hidden'; 'text-overflow' = 'ellipsis' }
+                                                                        New-UDTypography -Text "  $($param.Name): $($param.Value)" -Variant "caption" -Style @{ 'font-size' = '0.65rem'; 'color' = '#1976d2'; 'margin-left' = '8px'; 'white-space' = 'nowrap'; 'overflow' = 'hidden'; 'text-overflow' = 'ellipsis' }
                                                                     }
                                                                 }
                                                             }
@@ -1051,35 +1051,35 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
                                                     }
                                                 }
                                             } else {
-                                                New-UDTypography -Text 'None' -Variant caption -Style @{ 'opacity' = '0.6' }
+                                                New-UDTypography -Text 'None' -Variant "caption" -Style @{ 'opacity' = '0.6' }
                                             }
                                         }
-                                        New-UDTableColumn -Property 'CustomRoles' -Title 'Custom Roles' -Render {
+                                        New-UDTableColumn -Property 'CustomRoles' -Title "Custom Roles" -Render {
                                             if ($EventData.CustomRoles -and $EventData.CustomRoles.Count -gt 0) {
                                                 $roleCount = ($EventData.CustomRoles | Measure-Object).Count
                                                 $rolesText = $EventData.CustomRoles -join ', '
-                                                New-UDStack -Direction column -Content {
-                                                    New-UDTypography -Text "$roleCount role(s)" -Variant caption -Style @{ 'font-weight' = 'bold'; 'color' = '#1976d2' }
-                                                    New-UDTypography -Text $rolesText -Variant caption -Style @{ 'font-size' = '0.75rem'; 'opacity' = '0.8' }
+                                                New-UDStack -Direction "column" -Content {
+                                                    New-UDTypography -Text "$roleCount role(s)" -Variant "caption" -Style @{ 'font-weight' = 'bold'; 'color' = '#1976d2' }
+                                                    New-UDTypography -Text $rolesText -Variant "caption" -Style @{ 'font-size' = '0.75rem'; 'opacity' = '0.8' }
                                                 }
                                             } else {
-                                                New-UDTypography -Text 'None' -Variant caption -Style @{ 'opacity' = '0.6' }
+                                                New-UDTypography -Text 'None' -Variant "caption" -Style @{ 'opacity' = '0.6' }
                                             }
                                         }
-                                        New-UDTableColumn -Property Actions -Title 'Actions' -Render {
-                                            New-UDButton -Text 'Remove' -Size small -OnClick {
+                                        New-UDTableColumn -Property Actions -Title "Actions" -Render {
+                                            New-UDButton -Text "Remove" -Size "small" -OnClick {
                                                 $selectedVM = $EventData.Name
                                                 $Session:VMs = $Session:VMs | Where-Object { $_.Name -ne $selectedVM }
                                                 Sync-UDElement -Id 'VMList'
-                                            } -Color error -Icon (New-UDIcon -Icon trash)
+                                            } -Color error -Icon (New-UDIcon -Icon "trash")
                                         }
                                     )
                                 }
                             } else {
-                                New-UDAlert -Severity info -Text 'Add virtual machines to your lab. Each VM will be connected to one of your defined virtual switches.'
+                                New-UDAlert -Severity "info" -Text "Add virtual machines to your lab. Each VM will be connected to one of your defined virtual switches."
                             }
                         }
-                    } -Label 'Virtual Machines'
+                    } -Label "Virtual Machines"
 
                     # Step 4: Finalize Lab
                     New-UDStep -OnLoad {
@@ -1088,33 +1088,33 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
 
                         if ($networkCount -gt 0 -and $vmCount -gt 0) {
                             # Lab Summary Card
-                            New-UDCard -Title 'Lab Configuration Complete' -Content {
+                            New-UDCard -Title "Lab Configuration Complete" -Content {
                                 $labName = if (![string]::IsNullOrEmpty($Session:LabName)) { $Session:LabName } else { 'Unnamed Lab' }
 
                                 New-UDGrid -Container -Content {
                                     New-UDGrid -Item -ExtraSmallSize 12 -SmallSize 6 -Content {
                                         New-UDCard -Content {
-                                            New-UDCardHeader -Title 'Lab Information'
+                                            New-UDCardHeader -Title "Lab Information"
                                             New-UDCardBody -Content {
-                                                New-UDTypography -Text "Name: $labName" -Variant body1
+                                                New-UDTypography -Text "Name: $labName" -Variant "body1"
                                                 if (![string]::IsNullOrEmpty($Session:LabDescription)) {
-                                                    New-UDTypography -Text "Description: $($Session:LabDescription)" -Variant body2
+                                                    New-UDTypography -Text "Description: $($Session:LabDescription)" -Variant "body2"
                                                 }
-                                                New-UDTypography -Text "Virtual Switches: $networkCount" -Variant body1
-                                                New-UDTypography -Text "Virtual Machines: $vmCount" -Variant body1
+                                                New-UDTypography -Text "Virtual Switches: $networkCount" -Variant "body1"
+                                                New-UDTypography -Text "Virtual Machines: $vmCount" -Variant "body1"
                                             }
                                         }
                                     }
 
                                     New-UDGrid -Item -ExtraSmallSize 12 -SmallSize 6 -Content {
                                         New-UDCard -Content {
-                                            New-UDCardHeader -Title 'Resources Summary'
+                                            New-UDCardHeader -Title "Resources Summary"
                                             New-UDCardBody -Content {
                                                 if ($Session:VMs -and $vmCount -gt 0) {
                                                     $totalCPU = ($Session:VMs | Measure-Object -Property CPU -Sum).Sum
                                                     $totalRAM = ($Session:VMs | Measure-Object -Property RAM -Sum).Sum
-                                                    New-UDTypography -Text "Total CPU Cores: $totalCPU" -Variant body1
-                                                    New-UDTypography -Text "Total RAM: ${totalRAM}GB" -Variant body1
+                                                    New-UDTypography -Text "Total CPU Cores: $totalCPU" -Variant "body1"
+                                                    New-UDTypography -Text "Total RAM: ${totalRAM}GB" -Variant "body1"
                                                 }
                                             }
                                         }
@@ -1123,10 +1123,10 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
                             } -Style @{ 'margin-bottom' = '16px' }
 
                             # Editable Preview Card
-                            New-UDCard -Title 'Lab Definition Script' -Content {
+                            New-UDCard -Title "Lab Definition Script" -Content {
                                 New-UDGrid -Container -Content {
                                     New-UDGrid -Item -ExtraSmallSize 12 -Content {
-                                        New-UDAlert -Severity info -Text 'Review and customize your lab definition script below. You can modify the PowerShell code if needed before saving. The script will be saved to the AutomatedLab configuration directory and downloaded for your use.'
+                                        New-UDAlert -Severity "info" -Text "Review and customize your lab definition script below. You can modify the PowerShell code if needed before saving. The script will be saved to the AutomatedLab configuration directory and downloaded for your use."
                                     } -Style @{ 'margin-bottom' = '16px' }
 
                                     New-UDGrid -Item -ExtraSmallSize 12 -Content {
@@ -1144,9 +1144,9 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
                                                 $preview = New-AutomatedLabDefinitionScript -LabData $labData
                                                 # Store in session for later use
                                                 $Session:GeneratedScript = $preview
-                                                New-UDCodeEditor -Id 'LabDefinitionEditor' -Code $preview -Language 'powershell' -Height '500px'
+                                                New-UDCodeEditor -Id 'LabDefinitionEditor' -Code $preview -Language "powershell" -Height "500px"
                                             } catch {
-                                                New-UDAlert -Severity error -Text "Error generating definition: $($_.Exception.Message)"
+                                                New-UDAlert -Severity "error" -Text "Error generating definition: $($_.Exception.Message)"
                                             }
                                         }
                                     } -Style @{ 'margin-bottom' = '16px' }
@@ -1154,7 +1154,7 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
                                     New-UDGrid -Item -ExtraSmallSize 12 -Content {
                                         New-UDGrid -Container -Content {
                                             New-UDGrid -Item -ExtraSmallSize 12 -SmallSize 4 -Content {
-                                                New-UDButton -Text 'Save Lab' -Color primary -Size large -FullWidth -OnClick {
+                                                New-UDButton -Text "Save Lab" -Color "primary" -Size "large" -FullWidth -OnClick {
                                                     $labName = if (![string]::IsNullOrEmpty($Session:LabName)) { $Session:LabName } else { "Lab_$(Get-Date -Format 'yyyyMMdd_HHmmss')" }
 
                                                     # Get the current content from the code editor
@@ -1177,7 +1177,7 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
                                                         New-LabConfiguration @configurationParameters
 
                                                         # Always download the file
-                                                        Start-UDDownload -StringData $definitionContent -FileName $fileName -ContentType 'text/plain'
+                                                        Start-UDDownload -StringData $definitionContent -FileName $fileName -ContentType "text/plain"
 
                                                         # Show the post-save buttons
                                                         Set-UDElement -Id 'PostSaveActions' -Properties @{ style = @{ display = 'block' } }
@@ -1185,19 +1185,19 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
                                                     } catch {
                                                         Show-UDToast -Message "Error saving lab: $($_.Exception.Message)" -Duration 5000
                                                     }
-                                                } -Icon (New-UDIcon -Icon save)
+                                                } -Icon (New-UDIcon -Icon "save")
                                             } -Id 'SaveLabButton' -Style @{ 'margin-bottom' = '16px'; 'padding' = '0 8px' }
 
                                             # Post-save action buttons (hidden initially)
                                             New-UDGrid -Item -ExtraSmallSize 12 -Id 'PostSaveActions' -Content {
                                                 New-UDGrid -Container -Content {
                                                     New-UDGrid -Item -ExtraSmallSize 12 -SmallSize 4 -Content {
-                                                        New-UDButton -Text 'Manage Labs' -Color success -Size large -FullWidth -OnClick {
+                                                        New-UDButton -Text "Manage Labs" -Color success -Size "large" -FullWidth -OnClick {
                                                             Invoke-UDRedirect -Url '/Manage-Labs'
-                                                        } -Icon (New-UDIcon -Icon cogs)
+                                                        } -Icon (New-UDIcon -Icon "cogs")
                                                     } -Style @{ 'margin-bottom' = '16px'; 'padding' = '0 8px' }
                                                     New-UDGrid -Item -ExtraSmallSize 12 -SmallSize 4 -Content {
-                                                        New-UDButton -Text 'Start New Lab' -Color secondary -Size large -FullWidth -OnClick {
+                                                        New-UDButton -Text "Start New Lab" -Color secondary -Size "large" -FullWidth -OnClick {
                                                             $Session:Networks = [System.Collections.Generic.List[PSCustomObject]]::new()
 
                                                             # Add Default Switch automatically
@@ -1228,7 +1228,7 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
 
                                                             # Reset stepper to first step
                                                             Set-UDElement -Id 'LabBuilderStepper' -Properties @{ activeStep = 0 }
-                                                        } -Icon (New-UDIcon -Icon plus)
+                                                        } -Icon (New-UDIcon -Icon "plus")
                                                     } -Style @{ 'margin-bottom' = '16px'; 'padding' = '0 8px' }
                                                 } -Spacing 2
                                             } -Style @{ display = 'none' }
@@ -1237,15 +1237,15 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
                                 }
                             }
                         } else {
-                            New-UDAlert -Severity warning -Text 'Please complete the previous steps to define at least one virtual switch and one virtual machine before finalizing your lab.'
+                            New-UDAlert -Severity "warning" -Text "Please complete the previous steps to define at least one virtual switch and one virtual machine before finalizing your lab."
                         }
-                    } -Label 'Finalize Lab'
+                    } -Label "Finalize Lab"
                 }
             }
         }
 
         # Component to load OS and Network Adapter data when page loads
-        New-UDDynamic -Id 'DataLoader' -Content {
+        New-UDDynamic -Id "DataLoader" -Content {
             if (-not $Session:OSLoaded -or -not $Session:AdaptersLoaded) {
                 try {
                     # Load OS data
@@ -1298,7 +1298,7 @@ $WizardPage = New-UDPage -Url '/Create-Lab' -Name 'Create A Lab' -Content {
 
     # Footer
     New-UDElement -Tag div -Attributes @{ style = @{ 'position' = 'fixed'; 'bottom' = '0'; 'left' = '0'; 'right' = '0'; 'z-index' = '1000' } } -Content {
-        New-UDTypography -Text 'AutomatedLab UI v1.2.0' -Variant caption -Align center -Style @{
+        New-UDTypography -Text "AutomatedLab UI v1.2.0" -Variant "caption" -Align "center" -Style @{
             'padding'          = '8px 16px'
             'opacity'          = '0.7'
             'background-color' = 'rgba(0,0,0,0.05)'
