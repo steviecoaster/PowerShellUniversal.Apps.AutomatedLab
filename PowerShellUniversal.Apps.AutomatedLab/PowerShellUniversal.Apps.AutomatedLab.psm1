@@ -2,14 +2,14 @@
     <#
     .SYNOPSIS
     Creates a new AutomatedLab management app.
-    
+
     .DESCRIPTION
     Creates a new AutomatedLab management app for PowerShell Universal.
     #>
 
     # Load all page scripts
     $DashboardPath = Join-Path $PSScriptRoot -ChildPath 'dashboards\AutomatedLab'
-    Get-ChildItem (Join-Path $DashboardPath -ChildPath 'pages') -Recurse -Filter *.ps1 | Foreach-Object {
+    Get-ChildItem (Join-Path $DashboardPath -ChildPath 'pages') -Recurse -Filter *.ps1 | ForEach-Object {
         . $_.FullName
     }
 
@@ -22,25 +22,25 @@ function Get-PSULabConfiguration {
     <#
     .SYNOPSIS
     Returns lab configuration objects
-    
+
     .DESCRIPTION
     Returns all lab configurations when no Name is specified, or a specific configuration when Name is provided.
-       
+
     .PARAMETER Name
     The name of the specific configuration to return. If not specified, all configurations are returned.
-    
+
     .EXAMPLE
     Get-AllLabConfigurations
-    
+
     Returns all available lab configurations.
-    
+
     .EXAMPLE
     Get-AllLabConfigurations -Name Example
-    
+
     Returns the specific configuration named 'Example'.
     #>
     [CmdletBinding()]
-    Param(
+    param(
         [Parameter()]
         [ArgumentCompleter({
                 param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
@@ -63,8 +63,7 @@ function Get-PSULabConfiguration {
             $config = Import-Configuration -Name $Name -CompanyName $env:USERNAME
             $config['Lab'] = $Name
             $config | Split-Configuration
-        }
-        else {
+        } else {
             $configPath = Join-Path $env:LocalAppData -ChildPath "powershell\$env:USERNAME"
             if (Test-Path $configPath) {
                 Get-ChildItem -Path $configPath -Directory | ForEach-Object {
@@ -81,10 +80,10 @@ function Split-Configuration {
     <#
     .SYNOPSIS
     Expands parameter hashtable from a configuration and adds indiviual properties to the parent object
-    
+
     .PARAMETER InputObject
     The configuration  hashtable to split
-    
+
     .EXAMPLE
     Split-Configuration -InputObject $configuration
 
@@ -95,7 +94,7 @@ function Split-Configuration {
     Get-PSULabConfiguration -Name Demo | Split-Configuration
     #>
     [CmdletBinding()]
-    Param(
+    param(
         [Parameter(Mandatory, ValueFromPipeline)]
         [Hashtable]
         $InputObject
@@ -121,28 +120,28 @@ function Get-PSULabInfo {
     <#
     .SYNOPSIS
     Gets virtual machine information for a specific lab using PowerShell Universal context
-    
+
     .DESCRIPTION
     This function imports an AutomatedLab by name and returns information about each machine
     including the name, processor count, memory, and operating system. This version is optimized
     for use within PowerShell Universal dashboards.
-    
+
     .PARAMETER LabName
     The name of the lab to import and analyze.
-    
+
     .EXAMPLE
     Get-PSULabInfo -LabName "MyTestLab"
-    
+
     .NOTES
     This function requires the AutomatedLab module to be installed and available.
     #>
-    
+
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true, Position = 0)]
         [string]$LabName
     )
-    
+
     try {
         Write-Verbose "Importing lab: $LabName"
         # Import the lab without validation to speed up the process
@@ -150,12 +149,12 @@ function Get-PSULabInfo {
 
         $machines = Get-LabVM
         $status = Get-LabVMStatus -AsHashTable
-        
+
         if (-not $machines) {
             Write-Warning "No machines found in lab '$LabName'"
             return @()
         }
-        
+
         $labInfo = foreach ($machine in $machines) {
             [PSCustomObject]@{
                 Name            = $machine.Name
@@ -166,11 +165,10 @@ function Get-PSULabInfo {
                 Status          = $status[$machine.Name]
             }
         }
-        
+
         Write-Verbose "Retrieved information for $($labInfo.Count) machines"
         return $labInfo
-    }
-    catch {
+    } catch {
         Write-Error "Failed to import lab '$LabName': $($_.Exception.Message)"
         return @()
     }
@@ -180,24 +178,24 @@ function Get-LabInfo {
     <#
     .SYNOPSIS
     Imports a lab by name and returns basic information about the lab machines.
-    
+
     .DESCRIPTION
     This function imports an AutomatedLab by name and returns information about each machine
     including the name, processor count, memory, and operating system.
-    
+
     .PARAMETER LabName
     The name of the lab to import and analyze.
-    
+
     .EXAMPLE
     Get-LabInfo -LabName "MyTestLab"
-    
+
     .EXAMPLE
     Get-LabInfo "MyTestLab" | Format-Table -AutoSize
-    
+
     .NOTES
     This function requires the AutomatedLab module to be installed and available.
     #>
-    
+
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true, Position = 0)]
@@ -208,14 +206,13 @@ function Get-LabInfo {
                     $availableLabs | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
                         [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
                     }
-                }
-                catch {
+                } catch {
                     @()
                 }
             })]
         [string]$LabName
     )
-    
+
     try {
 
         Write-Verbose "Importing lab: $LabName"
@@ -228,7 +225,7 @@ function Get-LabInfo {
             Write-Warning "No machines found in lab '$LabName'"
             return
         }
-        
+
         $labInfo = foreach ($machine in $machines) {
             [PSCustomObject]@{
                 Name            = $machine.Name
@@ -239,11 +236,10 @@ function Get-LabInfo {
                 Status          = $status[$machine.Name]
             }
         }
-        
+
         Write-Verbose "Retrieved information for $($labInfo.Count) machines"
         return $labInfo
-    }
-    catch {
+    } catch {
         Write-Error "Failed to import lab '$LabName': $($_.Exception.Message)"
         throw
     }
@@ -256,7 +252,7 @@ function New-AutomatedLabDefinitionScript {
         [hashtable]
         $LabData
     )
-    
+
     process {
         $script = @"
 # AutomatedLab Definition: $($LabData.LabName)
@@ -274,14 +270,14 @@ New-LabDefinition -Name '$($LabData.LabName)' -DefaultVirtualizationEngine Hyper
                 'DefaultSwitch' {
                     $script += "Add-LabVirtualNetworkDefinition -Name 'Default Switch'`n"
                 }
-                'Internal' {
+                "Internal" {
                     $script += "Add-LabVirtualNetworkDefinition -Name '$($network.Name)' -AddressSpace '$($network.Subnet)'"
-                    if ($network.Gateway) { 
-                        $script += " -HyperVProperties @{ SwitchType = 'Internal' }" 
+                    if ($network.Gateway) {
+                        $script += " -HyperVProperties @{ SwitchType = 'Internal' }"
                     }
                     $script += "`n"
                 }
-                'External' {
+                "External" {
                     $script += "Add-LabVirtualNetworkDefinition -Name '$($network.Name)' -HyperVProperties @{ SwitchType = 'External'; AdapterName = '$($network.PhysicalAdapter)' }`n"
                 }
             }
@@ -291,11 +287,26 @@ New-LabDefinition -Name '$($LabData.LabName)' -DefaultVirtualizationEngine Hyper
 
         # Add VMs
         foreach ($vm in $LabData.VMs) {
-            if($vm.BuiltInRoles -and $vm.BuiltInRoles.Count -gt 0) {
-                $roles = ($vm.BuiltInRoles | ForEach-Object { "'$_'" }) -join ','
-                $script += "Add-LabMachineDefinition -Name '$($vm.Name)' -OperatingSystem '$($vm.OS)' -Memory $($vm.RAM)GB -Processors $($vm.CPU) -Roles @($roles)"
+            $vmDefinition = ''
+
+            if ($vm.BuiltInRoles -and $vm.BuiltInRoles.Count -gt 0 -and
+                ($vm.BuiltInRoles.OptionalParameters.Count -gt 0 -or $vm.BuiltInRoles.MandatoryParameters.Count -gt 0)
+            ) {
+                if ( $vm.BuiltInRoles.OptionalParameters.Count -gt 0) {
+                    $paramString = '@{' + (($vm.BuiltInRoles.OptionalParameters.GetEnumerator() | ForEach-Object { "'$($_.Name)' = '$($_.Value)'" }) -join '; ') + '}'
+                    $script += "`$roles = @()`n"
+                    $script += "`$roles += Get-LabMachineRoleDefinition -Role $($vm.BuiltInRoles.RoleName) -Properties $paramString`n"
+                    $vmDefinition = "Add-LabMachineDefinition -Name '$($vm.Name)' -OperatingSystem '$($vm.OS)' -Memory $($vm.RAM)GB -Processors $($vm.CPU) -Roles `$roles"
+                }
+
+                if ( $vm.BuiltInRoles.MandatoryParameters.Count -gt 0) {
+                    $paramString = '@{' + (($vm.BuiltInRoles.MandatoryParameters.GetEnumerator() | ForEach-Object { "'$($_.Name)' = '$($_.Value)'" }) -join '; ') + '}'
+                    $script += "`$roles = @()`n"
+                    $script += "`$roles += Get-LabMachineRoleDefinition -Role $($vm.BuiltInRoles.RoleName) -Properties $paramString`n"
+                    $vmDefinition = "Add-LabMachineDefinition -Name '$($vm.Name)' -OperatingSystem '$($vm.OS)' -Memory $($vm.RAM)GB -Processors $($vm.CPU) -Roles `$roles"
+                }
             } else {
-                $script += "Add-LabMachineDefinition -Name '$($vm.Name)' -OperatingSystem '$($vm.OS)' -Memory $($vm.RAM)GB -Processors $($vm.CPU)"
+                $vmDefinition = "Add-LabMachineDefinition -Name '$($vm.Name)' -OperatingSystem '$($vm.OS)' -Memory $($vm.RAM)GB -Processors $($vm.CPU)"
             }
 
             if ($vm.NetworkAdapters -and $vm.NetworkAdapters.Count -gt 0) {
@@ -309,16 +320,15 @@ New-LabDefinition -Name '$($LabData.LabName)' -DefaultVirtualizationEngine Hyper
                     }
                     if ($_.UseDhcp -eq $false -and $_.IpAddress) {
                         # Static IP configuration - don't add UseDhcp parameter as it defaults to false when IpAddress is specified
-                    }
-                    else {
+                    } else {
                         # DHCP configuration
                         $adapterDef += " -UseDhcp"
                     }
                     $adapterDef
                 }
-                $script += " -NetworkAdapter @($($adapters -join ', '))"
+                $vmDefinition += " -NetworkAdapter @($($adapters -join ', '))"
             }
-            $script += "`n"
+            $script += "$vmDefinition`n"
         }
 
         $script += "`n"
@@ -343,11 +353,11 @@ New-LabDefinition -Name '$($LabData.LabName)' -DefaultVirtualizationEngine Hyper
             }
         }
 
-        $script += @"
+        $script += @'
 
 Install-Lab
 
-"@
+'@
 
         return $script
     }
@@ -355,7 +365,7 @@ Install-Lab
 
 function New-AutomatedLabISO {
     [CmdletBinding()]
-    Param(
+    param(
         [Parameter(Mandatory)]
         [String]
         $ISOFile
@@ -367,16 +377,15 @@ function New-AutomatedLabISO {
         try {
             Copy-Item $ISOFile -Destination $ISOFolder -ErrorAction Stop
             Show-UDToast -Message "$ISOFile added to $ISOFolder successfully!"
-        }
-        catch {
+        } catch {
             Show-UDToast -Message "$ISOFile upload failed!"
-        }   
+        }
     }
 }
 
 function Start-PSULab {
     [CmdletBinding()]
-    Param(
+    param(
         [Parameter(Mandatory)]
         [String]
         $LabName
@@ -389,7 +398,7 @@ function Start-PSULab {
 
 function Start-SingleVM {
     [CmdletBinding()]
-    Param(
+    param(
         [Parameter(Mandatory)]
         [String]
         $LabVM
@@ -402,7 +411,7 @@ function Start-SingleVM {
 
 function Stop-PSULab {
     [CmdletBinding()]
-    Param(
+    param(
         [Parameter(Mandatory)]
         [String]
         $LabName
@@ -415,7 +424,7 @@ function Stop-PSULab {
 
 function Stop-SingleVM {
     [CmdletBinding()]
-    Param(
+    param(
         [Parameter(Mandatory)]
         [String]
         $LabVM
@@ -427,4 +436,4 @@ function Stop-SingleVM {
 }
 
 
-New-PSUScript -Module 'PowerShellUniversal.Apps.AutomatedLab' -Command 'Start-Lab' -Environment 'PowerShell 7'
+New-PSUScript -Module "PowerShellUniversal.Apps.AutomatedLab" -Command "Start-Lab" -Environment "PowerShell 7"
